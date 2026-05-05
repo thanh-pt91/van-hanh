@@ -1,0 +1,2118 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quản Lý Thay Đổi Thông Tin</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--Y:#F5C518;--YD:#D4A800;--YL:#FFFADC;--SB:#15171E;--ST:#8B91A8;--SH:#1E212B;--BG:#EFF2F7;--CA:#FFFFFF;--BO:#E2E8F4;--TX:#181C28;--TM:#7A82A0;--TL:#4A5068;--DG:#E53E3E;--SC:#38A169;--WN:#D69E2E;--IN:#3182CE;--PU:#7C3AED;--R:10px;--SH2:0 1px 8px rgba(0,0,0,.06);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Be Vietnam Pro',sans-serif;background:var(--BG);color:var(--TX);display:flex;height:100vh;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{width:230px;min-width:230px;background:var(--SB);display:flex;flex-direction:column;height:100vh;}
+.logo-wrap{padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,0.05);}
+.logo-row{display:flex;align-items:center;gap:10px;}
+.logo-mark{width:34px;height:34px;background:var(--Y);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logo-name{font-size:15px;font-weight:800;color:#fff;}
+.logo-sub{font-size:9px;color:var(--ST);text-transform:uppercase;letter-spacing:1.8px;margin-top:1px;}
+.nav-sec{font-size:9px;font-weight:700;color:#333848;text-transform:uppercase;letter-spacing:1.8px;padding:16px 18px 6px;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:10px 14px;margin:1px 8px;border-radius:8px;cursor:pointer;color:var(--ST);font-size:13px;font-weight:500;transition:.15s;position:relative;user-select:none;}
+.nav-item:hover{background:var(--SH);color:#c8cde0;}
+.nav-item.active{background:rgba(245,197,24,.1);color:var(--Y);}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:20px;background:var(--Y);border-radius:0 3px 3px 0;}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:.7;}
+.nav-item.active svg{opacity:1;}
+.n-badge{margin-left:auto;background:var(--DG);color:#fff;font-size:10px;font-weight:700;border-radius:100px;padding:2px 7px;}
+.sidebar-foot{margin-top:auto;padding:12px 8px;border-top:1px solid rgba(255,255,255,0.05);}
+.user-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:rgba(255,255,255,0.04);}
+.u-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;}
+.u-name{font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.u-tag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:100px;display:inline-block;margin-top:2px;}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{height:54px;background:var(--CA);border-bottom:1px solid var(--BO);display:flex;align-items:center;justify-content:space-between;padding:0 22px;flex-shrink:0;}
+.breadcrumb{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--TM);}
+.breadcrumb .cur{color:var(--TX);font-weight:700;}
+.breadcrumb .sep{color:#CBD2E8;}
+.topbar-r{display:flex;align-items:center;gap:10px;}
+.search-w{display:flex;align-items:center;gap:7px;background:var(--BG);border:1.5px solid var(--BO);border-radius:8px;padding:6px 11px;width:190px;transition:.2s;}
+.search-w:focus-within{border-color:var(--Y);}
+.search-w input{border:none;background:none;outline:none;font-family:inherit;font-size:12px;color:var(--TX);width:100%;}
+.role-sw{display:flex;align-items:center;gap:6px;background:var(--BG);border:1.5px solid var(--BO);border-radius:8px;padding:5px 10px;}
+.role-sw label{font-size:10px;font-weight:700;color:var(--TM);white-space:nowrap;}
+.role-sw select{border:none;background:none;outline:none;font-family:inherit;font-size:12px;font-weight:700;color:var(--TX);cursor:pointer;}
+.chip{background:var(--YL);border:1px solid #E8D878;border-radius:7px;padding:4px 10px;font-size:11px;font-weight:700;color:#7A6200;}
+.sync-dot{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--TM);}
+.sync-dot .dot{width:7px;height:7px;border-radius:50%;background:#CBD2E8;}
+.sync-dot.synced .dot{background:var(--SC);}
+.sync-dot.syncing .dot{background:var(--WN);animation:pulse 1s infinite;}
+.sync-dot.error .dot{background:var(--DG);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:22px;}
+.ph{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;}
+.ph-title{font-size:20px;font-weight:800;letter-spacing:-.3px;}
+.ph-sub{font-size:12px;color:var(--TM);margin-top:3px;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;border:none;border-radius:8px;padding:8px 16px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:.15s;}
+.btn-p{background:var(--Y);color:#181C28;box-shadow:0 2px 8px rgba(245,197,24,.3);}
+.btn-p:hover{background:var(--YD);transform:translateY(-1px);}
+.btn-p:disabled{background:#DDD;color:#AAA;box-shadow:none;cursor:not-allowed;transform:none;}
+.btn-g{background:#fff;border:1.5px solid var(--BO);color:var(--TM);}
+.btn-g:hover{background:var(--BG);}
+
+/* FLOW GUIDE */
+.flow-bar{display:flex;align-items:center;gap:0;margin-bottom:16px;background:var(--CA);border:1px solid var(--BO);border-radius:var(--R);padding:12px 18px;box-shadow:var(--SH2);overflow-x:auto;flex-wrap:nowrap;}
+.fs-lbl{font-size:10px;font-weight:800;color:var(--TM);margin-right:10px;flex-shrink:0;text-transform:uppercase;letter-spacing:.8px;}
+.fs-box{display:flex;flex-direction:column;padding:7px 13px;border-radius:8px;font-size:11px;font-weight:700;flex-shrink:0;}
+.fs-who{font-size:9px;font-weight:600;opacity:.65;margin-top:2px;}
+.fs-arr{padding:0 7px;color:#CBD2E8;font-size:16px;flex-shrink:0;}
+.fs1{background:#FFF8E1;color:#B7791F;} .fs2{background:#EBF8FF;color:#2B6CB0;} .fs3{background:#FAF5FF;color:#6B21A8;} .fs4{background:#F0FFF4;color:#276749;} .fsx{background:#FFF5F5;color:#9B2C2C;}
+.fs-div{padding:0 10px;color:#E2E8F4;font-size:18px;flex-shrink:0;}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px;}
+.stat{background:var(--CA);border:1px solid var(--BO);border-radius:var(--R);padding:14px 16px;box-shadow:var(--SH2);display:flex;justify-content:space-between;align-items:center;}
+.sv{font-size:22px;font-weight:800;letter-spacing:-.5px;}
+.sl{font-size:10px;color:var(--TM);font-weight:600;margin-top:2px;text-transform:uppercase;letter-spacing:.5px;}
+.si{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;}
+.iy{background:rgba(245,197,24,.12);color:#c4a000;} .ib{background:rgba(49,130,206,.1);color:var(--IN);} .ig{background:rgba(56,161,105,.1);color:var(--SC);} .ir{background:rgba(229,62,62,.1);color:var(--DG);} .ip{background:rgba(124,58,237,.1);color:var(--PU);}
+
+/* FILTER */
+.fcard{background:var(--CA);border:1px solid var(--BO);border-radius:var(--R);padding:16px 18px;margin-bottom:14px;box-shadow:var(--SH2);}
+.fgrid{display:grid;grid-template-columns:1fr 1.3fr 1fr 1fr auto;gap:11px;align-items:end;}
+.fl label{display:block;font-size:10px;font-weight:700;color:var(--TM);text-transform:uppercase;letter-spacing:.9px;margin-bottom:5px;}
+.fi,.fs-el{width:100%;padding:8px 11px;border:1.5px solid var(--BO);border-radius:7px;font-family:inherit;font-size:12px;color:var(--TX);background:#FAFBFD;outline:none;transition:.18s;appearance:none;}
+.fi:focus,.fs-el:focus{border-color:var(--Y);background:#fff;}
+.dr{display:flex;align-items:center;gap:5px;}
+.dr input{flex:1;padding:8px 9px;border:1.5px solid var(--BO);border-radius:7px;font-family:inherit;font-size:11px;color:var(--TX);background:#FAFBFD;outline:none;transition:.18s;}
+.dr input:focus{border-color:var(--Y);background:#fff;}
+.drs{font-size:12px;color:var(--TM);}
+
+/* TABLE */
+.tc{background:var(--CA);border:1px solid var(--BO);border-radius:var(--R);box-shadow:var(--SH2);overflow:hidden;}
+.t-bar{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--BO);}
+.t-cnt{font-size:12px;color:var(--TM);}
+.t-cnt strong{color:var(--TX);}
+.t-acts{display:flex;gap:6px;}
+.bi{width:28px;height:28px;border:1.5px solid var(--BO);border-radius:6px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--TM);transition:.15s;}
+.bi:hover{background:var(--BG);color:var(--TX);}
+table{width:100%;border-collapse:collapse;}
+thead th{background:#F4F6FB;font-size:10px;font-weight:700;color:var(--TM);text-transform:uppercase;letter-spacing:.7px;padding:10px 14px;text-align:left;border-bottom:1px solid var(--BO);white-space:nowrap;}
+tbody tr{border-bottom:1px solid #EDF0F8;transition:background .12s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:#FAFBFE;}
+tbody td{padding:12px 14px;font-size:12px;color:var(--TX);vertical-align:middle;}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:100px;font-size:10px;font-weight:700;white-space:nowrap;}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.bw{background:#FFF8E1;color:#B7791F;} .bw::before{background:#D69E2E;}
+.bp{background:#EBF8FF;color:#2B6CB0;} .bp::before{background:#3182CE;}
+.br{background:#FAF5FF;color:#6B21A8;} .br::before{background:#7C3AED;}
+.bd{background:#F0FFF4;color:#276749;} .bd::before{background:#38A169;}
+.bc{background:#FFF5F5;color:#9B2C2C;} .bc::before{background:#E53E3E;}
+
+.tid{font-family:'Courier New',monospace;font-size:11px;font-weight:700;color:var(--IN);background:#EBF8FF;padding:3px 7px;border-radius:5px;}
+.vo{color:var(--DG);font-size:11px;font-weight:600;}
+.vn{color:var(--SC);font-size:11px;font-weight:700;}
+.img-cnt{display:inline-flex;align-items:center;gap:4px;background:#F0F3FF;color:var(--PU);font-size:10px;font-weight:700;padding:3px 8px;border-radius:100px;}
+
+/* ACTION BTNS */
+.ab{display:flex;gap:4px;flex-wrap:wrap;}
+.ba{padding:4px 10px;border-radius:6px;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;border:1.5px solid;transition:.15s;white-space:nowrap;}
+.ba:disabled{opacity:.3;cursor:not-allowed;}
+.ba-view{border-color:var(--BO);background:#fff;color:var(--TM);}          .ba-view:hover:not(:disabled){background:var(--BG);}
+.ba-recv{border-color:#90CDF4;background:#EBF8FF;color:#2B6CB0;}            .ba-recv:hover:not(:disabled){background:#BEE3F8;}
+.ba-proc{border-color:#9AE6B4;background:#F0FFF4;color:#276749;}            .ba-proc:hover:not(:disabled){background:#C6F6D5;}
+.ba-conf{border-color:#D6BCFA;background:#FAF5FF;color:#6B21A8;}            .ba-conf:hover:not(:disabled){background:#E9D8FD;}
+.ba-rej{border-color:#FEB2B2;background:#FFF5F5;color:#9B2C2C;}             .ba-rej:hover:not(:disabled){background:#FED7D7;}
+.ba-can{border-color:var(--BO);background:#F7FAFC;color:#718096;}           .ba-can:hover:not(:disabled){background:#EDF2F7;}
+.no-p{font-size:10px;color:#CBD2E0;font-style:italic;}
+
+/* PAGINATION */
+.pag{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--BO);font-size:12px;color:var(--TM);}
+.pnums{display:flex;gap:3px;}
+.pb{width:26px;height:26px;border-radius:6px;border:1.5px solid var(--BO);background:#fff;font-family:inherit;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;color:var(--TM);font-weight:700;}
+.pb:hover{background:var(--BG);}
+.pb.active{background:var(--Y);border-color:var(--Y);color:#181C28;}
+
+/* CONFIG PAGE - TABS */
+.tabs{display:flex;gap:2px;background:var(--BG);border:1px solid var(--BO);border-radius:9px;padding:3px;margin-bottom:18px;width:fit-content;}
+.tab-btn{padding:7px 18px;border-radius:7px;border:none;background:none;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;color:var(--TM);transition:.15s;}
+.tab-btn.active{background:var(--CA);color:var(--TX);box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.tab-cnt{display:none;}
+.tab-cnt.active{display:block;}
+
+/* ACCOUNT CARDS */
+.acc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.acc-card{background:var(--CA);border:1px solid var(--BO);border-radius:var(--R);padding:18px;box-shadow:var(--SH2);display:flex;flex-direction:column;gap:12px;}
+.acc-head{display:flex;align-items:center;gap:11px;}
+.acc-av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0;}
+.acc-nm{font-size:13px;font-weight:700;}
+.acc-em{font-size:11px;color:var(--TM);}
+.pt{font-size:10px;font-weight:700;padding:3px 9px;border-radius:100px;display:inline-block;}
+.pt-ad{background:rgba(245,197,24,.15);color:#7A6200;} .pt-op{background:rgba(49,130,206,.1);color:#2B6CB0;} .pt-rk{background:rgba(124,58,237,.1);color:#6B21A8;} .pt-vw{background:rgba(160,174,192,.1);color:#718096;}
+.acc-perms{display:flex;flex-wrap:wrap;gap:4px;}
+.acc-foot{display:flex;gap:6px;padding-top:10px;border-top:1px solid var(--BO);}
+.btn-ae{flex:1;padding:6px;border:1.5px solid var(--BO);border-radius:7px;background:#fff;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;color:var(--TM);transition:.15s;}
+.btn-ae:hover{background:var(--BG);}
+.btn-ae:disabled{opacity:.35;cursor:not-allowed;}
+.btn-ad{padding:6px 11px;border:1.5px solid #FEB2B2;border-radius:7px;background:#FFF5F5;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;color:#9B2C2C;transition:.15s;}
+.btn-ad:hover{background:#FED7D7;}
+.btn-ad:disabled{opacity:.35;cursor:not-allowed;}
+
+/* TYPE CONFIG */
+.type-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+.type-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1.5px solid var(--BO);border-radius:8px;background:#FAFBFD;}
+.type-item-name{font-size:13px;font-weight:600;}
+.type-item-btns{display:flex;gap:6px;}
+.btn-type-del{padding:4px 10px;border:1.5px solid #FEB2B2;border-radius:6px;background:#FFF5F5;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;color:#9B2C2C;transition:.15s;}
+.btn-type-del:hover{background:#FED7D7;}
+.add-type{display:flex;gap:8px;align-items:center;}
+.add-type input{flex:1;padding:9px 12px;border:1.5px solid var(--BO);border-radius:8px;font-family:inherit;font-size:13px;color:var(--TX);background:#FAFBFD;outline:none;transition:.18s;}
+.add-type input:focus{border-color:var(--Y);background:#fff;}
+
+/* SHEETS CONNECT */
+.conn-box{background:#F8FAFF;border:1.5px solid var(--BO);border-radius:var(--R);padding:20px;}
+.conn-status{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;font-size:12px;font-weight:600;margin-bottom:16px;}
+.conn-status.ok{background:#F0FFF4;color:#276749;border:1.5px solid #9AE6B4;}
+.conn-status.fail{background:#FFF5F5;color:#9B2C2C;border:1.5px solid #FEB2B2;}
+.conn-status.none{background:var(--BG);color:var(--TM);border:1.5px solid var(--BO);}
+.code-block{background:#1A1D23;color:#E2E8F4;border-radius:8px;padding:16px;font-family:'Courier New',monospace;font-size:11px;line-height:1.7;overflow-x:auto;max-height:260px;overflow-y:auto;margin-top:10px;position:relative;}
+.copy-btn{position:absolute;top:10px;right:10px;padding:5px 12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:#fff;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:.15s;}
+.copy-btn:hover{background:rgba(255,255,255,.2);}
+.perm-table{width:100%;font-size:11px;border-radius:8px;overflow:hidden;}
+.perm-table th{background:#F4F6FB;padding:9px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--TM);text-transform:uppercase;letter-spacing:.7px;border-bottom:1px solid var(--BO);}
+.perm-table td{padding:9px 12px;border-bottom:1px solid #EDF0F8;}
+.perm-table tr:last-child td{border-bottom:none;}
+
+/* MODALS */
+.overlay{display:none;position:fixed;inset:0;background:rgba(10,12,20,.58);backdrop-filter:blur(4px);z-index:200;align-items:center;justify-content:center;}
+.overlay.show{display:flex;animation:fIn .18s ease;}
+@keyframes fIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--CA);border-radius:14px;padding:26px;max-width:95vw;box-shadow:0 24px 80px rgba(0,0,0,.22);animation:sUp .2s ease;}
+@keyframes sUp{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
+.mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.mt{font-size:17px;font-weight:800;}
+.mx{width:27px;height:27px;border-radius:7px;border:1.5px solid var(--BO);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--TM);transition:.15s;}
+.mx:hover{background:var(--BG);}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+.fgrp{margin-bottom:13px;}
+.fgrp label{display:block;font-size:10px;font-weight:700;color:var(--TL);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;}
+.fgrp label .opt{font-weight:400;color:var(--TM);font-style:italic;text-transform:none;letter-spacing:0;}
+.fgrp input,.fgrp select,.fgrp textarea{width:100%;padding:9px 12px;border:1.5px solid var(--BO);border-radius:8px;font-family:inherit;font-size:12px;color:var(--TX);background:#FAFBFD;outline:none;transition:.18s;resize:vertical;}
+.fgrp input:focus,.fgrp select:focus,.fgrp textarea:focus{border-color:var(--Y);background:#fff;}
+.mf{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;padding-top:16px;border-top:1px solid var(--BO);}
+.btn-cm{padding:8px 18px;border:1.5px solid var(--BO);border-radius:8px;background:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;color:var(--TM);transition:.15s;}
+.btn-cm:hover{background:var(--BG);}
+.btn-ok{padding:8px 18px;border:none;border-radius:8px;background:var(--Y);font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;color:#181C28;transition:.18s;box-shadow:0 2px 8px rgba(245,197,24,.3);}
+.btn-ok:hover{background:var(--YD);}
+.btn-ok.danger{background:var(--DG);color:#fff;box-shadow:0 2px 8px rgba(229,62,62,.3);}
+.btn-ok.danger:hover{background:#C53030;}
+
+/* IMAGE ATTACH */
+.paste-zone{border:2px dashed var(--BO);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:.2s;background:#FAFBFD;position:relative;}
+.paste-zone:hover,.paste-zone.drag-over{border-color:var(--Y);background:var(--YL);}
+.paste-zone.focused{border-color:var(--Y);outline:none;}
+.paste-hint{font-size:12px;color:var(--TM);margin-top:6px;}
+.img-previews{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+.img-thumb{position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;border:1.5px solid var(--BO);}
+.img-thumb img{width:100%;height:100%;object-fit:cover;}
+.img-del{position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(0,0,0,.6);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:10px;border:none;}
+.img-del:hover{background:rgba(229,62,62,.9);}
+.img-upload-status{position:absolute;bottom:2px;right:2px;font-size:11px;background:rgba(0,0,0,.55);border-radius:4px;padding:1px 4px;}
+
+/* DETAIL MODAL */
+.detail-modal{width:580px;}
+.det-section{margin-bottom:18px;}
+.det-sec-title{font-size:10px;font-weight:800;color:var(--TM);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--BO);}
+.det-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.det-field{}
+.det-lbl{font-size:10px;font-weight:700;color:var(--TM);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px;}
+.det-val{font-size:13px;font-weight:600;color:var(--TX);}
+.det-val.muted{color:var(--TM);font-weight:400;font-style:italic;}
+.det-desc{font-size:13px;color:var(--TX);line-height:1.6;background:#F8FAFF;border-radius:8px;padding:12px;border:1px solid var(--BO);}
+.det-imgs{display:flex;flex-wrap:wrap;gap:8px;}
+.det-img{width:80px;height:80px;border-radius:8px;overflow:hidden;border:1.5px solid var(--BO);cursor:zoom-in;}
+.det-img img{width:100%;height:100%;object-fit:cover;}
+.timeline{display:flex;flex-direction:column;gap:10px;}
+.tl-item{display:flex;gap:12px;align-items:flex-start;}
+.tl-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.tl-line{width:1px;background:var(--BO);flex-shrink:0;margin:0 4px;}
+.tl-text{font-size:12px;color:var(--TX);}
+.tl-time{font-size:10px;color:var(--TM);}
+.reject-note-box{background:#FFF5F5;border:1.5px solid #FEB2B2;border-radius:8px;padding:12px;font-size:12px;color:#9B2C2C;}
+.reject-note-box strong{display:block;margin-bottom:4px;font-size:10px;text-transform:uppercase;letter-spacing:.7px;}
+
+/* CONFIRM / REJECT MODALS */
+.c-modal{width:400px;}
+.c-icon{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}
+.c-title{text-align:center;font-size:16px;font-weight:800;margin-bottom:6px;}
+.c-sub{text-align:center;font-size:12px;color:var(--TM);margin-bottom:4px;}
+.c-code{text-align:center;font-size:12px;font-weight:700;color:var(--IN);margin-bottom:16px;}
+
+/* TOAST */
+.toast-w{position:fixed;bottom:22px;right:22px;z-index:999;display:flex;flex-direction:column;gap:8px;}
+.toast{display:flex;align-items:center;gap:10px;background:var(--TX);color:#fff;border-radius:10px;padding:11px 16px;font-size:12px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,.2);animation:tIn .25s ease;min-width:240px;}
+@keyframes tIn{from{transform:translateX(50px);opacity:0}to{transform:none;opacity:1}}
+.t-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.toast.ok .t-dot{background:var(--SC);} .toast.err .t-dot{background:var(--DG);} .toast.inf .t-dot{background:var(--IN);}
+
+/* LOGIN PAGE */
+.login-screen{position:fixed;inset:0;background:rgba(10,12,20,.65);backdrop-filter:blur(5px);z-index:1000;display:flex;align-items:center;justify-content:center;}
+.login-screen.hide{display:none;}
+.login-card{background:var(--CA);border-radius:18px;padding:40px 36px;width:420px;max-width:95vw;box-shadow:0 32px 100px rgba(0,0,0,.4);animation:sUp .3s ease;}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:28px;}
+.login-logo-mark{width:42px;height:42px;background:var(--Y);border-radius:10px;display:flex;align-items:center;justify-content:center;}
+.login-title{font-size:22px;font-weight:800;margin-bottom:4px;}
+.login-sub{font-size:13px;color:var(--TM);margin-bottom:24px;}
+.login-divider{display:flex;align-items:center;gap:10px;margin:18px 0;color:var(--TM);font-size:11px;font-weight:600;}
+.login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--BO);}
+.btn-google{width:100%;padding:11px;border:1.5px solid var(--BO);border-radius:9px;background:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:.15s;color:var(--TX);}
+.btn-google:hover{background:var(--BG);border-color:#C0C6D8;}
+.login-err{background:#FFF5F5;border:1.5px solid #FEB2B2;border-radius:8px;padding:10px 13px;font-size:12px;color:#9B2C2C;margin-bottom:14px;display:none;}
+.login-err.show{display:block;}
+.login-foot{text-align:center;margin-top:20px;font-size:11px;color:var(--TM);}
+.fgrp-login{margin-bottom:14px;}
+.fgrp-login label{display:block;font-size:10px;font-weight:700;color:var(--TL);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;}
+.fgrp-login input{width:100%;padding:10px 13px;border:1.5px solid var(--BO);border-radius:9px;font-family:inherit;font-size:13px;color:var(--TX);background:#FAFBFD;outline:none;transition:.18s;}
+.fgrp-login input:focus{border-color:var(--Y);background:#fff;}
+.btn-login{width:100%;padding:11px;border:none;border-radius:9px;background:var(--Y);font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;color:#181C28;transition:.18s;box-shadow:0 3px 12px rgba(245,197,24,.35);}
+.btn-login:hover{background:var(--YD);}
+.forgot-link{float:right;font-size:11px;color:var(--IN);cursor:pointer;font-weight:600;}
+.forgot-link:hover{text-decoration:underline;}
+
+/* DETAIL TABS */
+.det-tabs{display:flex;gap:2px;background:var(--BG);border:1px solid var(--BO);border-radius:8px;padding:3px;margin-bottom:18px;width:fit-content;}
+.det-tab{padding:6px 16px;border-radius:6px;border:none;background:none;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;color:var(--TM);transition:.15s;}
+.det-tab.active{background:var(--CA);color:var(--TX);box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.det-tab-cnt{display:none;overflow-y:auto;}
+.det-tab-cnt.active{display:block;}
+/* Modal chi tiết: fixed width, tabs handle their own scroll height */
+.detail-modal{width:580px;}
+
+/* TIMELINE / HISTORY */
+.tl-wrap{display:flex;flex-direction:column;position:relative;}
+.tl-wrap::before{content:'';position:absolute;left:13px;top:18px;bottom:6px;width:2px;background:linear-gradient(to bottom,var(--Y),var(--BO));border-radius:2px;}
+.tl-row{display:flex;gap:14px;align-items:flex-start;padding:0 0 18px;}
+.tl-row:last-child{padding-bottom:0;}
+.tl-ico{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;border:2px solid var(--CA);z-index:1;}
+.tl-body{flex:1;background:#FAFBFD;border:1px solid var(--BO);border-radius:9px;padding:10px 13px;}
+.tl-action{font-size:12px;font-weight:700;color:var(--TX);}
+.tl-meta{font-size:11px;color:var(--TM);margin-top:3px;}
+.tl-note{font-size:11px;color:#9B2C2C;background:#FFF5F5;border-radius:5px;padding:5px 9px;margin-top:7px;border-left:3px solid #FEB2B2;}
+
+/* TOPBAR USER */
+.topbar-user{display:flex;align-items:center;gap:8px;background:var(--BG);border:1.5px solid var(--BO);border-radius:9px;padding:5px 12px;cursor:pointer;transition:.15s;position:relative;}
+.topbar-user:hover{background:#E8EBF5;}
+.topbar-user .av{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;}
+.topbar-user .uname{font-size:12px;font-weight:700;color:var(--TX);}
+.topbar-user .urole{font-size:10px;color:var(--TM);}
+.user-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--CA);border:1px solid var(--BO);border-radius:10px;padding:6px;box-shadow:0 8px 30px rgba(0,0,0,.12);min-width:170px;z-index:100;}
+.user-menu.show{display:block;animation:fIn .15s ease;}
+.um-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;color:var(--TX);transition:.12s;}
+.um-item:hover{background:var(--BG);}
+.um-item.danger{color:var(--DG);}
+.um-item.danger:hover{background:#FFF5F5;}
+.um-div{height:1px;background:var(--BO);margin:4px 0;}
+.lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:999;align-items:center;justify-content:center;cursor:zoom-out;}
+.lightbox.show{display:flex;}
+.lightbox img{max-width:90vw;max-height:90vh;border-radius:8px;}
+
+/* EMPTY */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px;color:var(--TM);}
+.empty svg{opacity:.25;margin-bottom:12px;}
+.empty p{font-size:13px;font-weight:600;}
+
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-thumb{background:#CBD2E8;border-radius:10px;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen hide" id="loginScreen">
+  <div class="login-card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+      <div class="login-logo">
+        <div class="login-logo-mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#181C28"/></svg></div>
+        <div><div style="font-size:18px;font-weight:800;">DataFlow</div><div style="font-size:11px;color:var(--TM);">Management System</div></div>
+      </div>
+      <button onclick="doLogout()" style="border:none;background:none;cursor:pointer;color:var(--TM);font-size:20px;padding:2px 6px;border-radius:6px;" title="Đóng">×</button>
+    </div>
+    <div class="login-title">Đăng nhập</div>
+    <div id="loginContext" class="login-sub" style="background:var(--YL);border:1px solid #E8D878;border-radius:8px;padding:9px 12px;font-size:12px;color:#7A6200;margin-bottom:16px;">🔒 Bạn cần đăng nhập để thực hiện thao tác này.</div>
+    <div class="login-err" id="loginErr">❌ Sai tài khoản hoặc mật khẩu!</div>
+
+    <button class="btn-google" onclick="toggleGmailInput()">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+      Đăng nhập bằng Google
+    </button>
+    <!-- Gmail input - hiện khi bấm nút Google -->
+    <div id="gmailInputWrap" style="display:none;margin-top:10px;">
+      <div class="fgrp-login">
+        <label>Nhập địa chỉ Gmail</label>
+        <input type="email" id="gmailInput" placeholder="yourname@gmail.com" onkeydown="if(event.key==='Enter')loginWithGoogle()">
+      </div>
+      <button class="btn-login" style="background:#4285F4;color:#fff;box-shadow:0 3px 12px rgba(66,133,244,.35);" onclick="loginWithGoogle()">
+        Xác nhận Gmail
+      </button>
+    </div>
+
+    <div class="login-divider">hoặc đăng nhập bằng tài khoản</div>
+
+    <div class="fgrp-login">
+      <label>Email / Tên đăng nhập</label>
+      <input type="text" id="loginUser" placeholder="email@company.vn" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="fgrp-login">
+      <label>Mật khẩu <span class="forgot-link" onclick="openForgot()">Quên mật khẩu?</span></label>
+      <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn-login" onclick="doLogin()">Đăng nhập</button>
+    <div class="login-foot">Phiên bản 1.0 · DataFlow Management</div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <div class="logo-row">
+      <div class="logo-mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#181C28"/></svg></div>
+      <div><div class="logo-name">DataFlow</div><div class="logo-sub">Management</div></div>
+    </div>
+  </div>
+  <div class="nav-sec">Điều hướng</div>
+  <div class="nav-item" onclick="gotoPage('tongquan')" id="nav-tongquan">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    Tổng quan
+  </div>
+  <div class="nav-item active" onclick="gotoPage('thaydoi')" id="nav-thaydoi">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    Thay đổi thông tin
+    <span class="n-badge" id="topBadge">0</span>
+  </div>
+  <div class="nav-item" onclick="gotoPageOrLogin('cauhinh')" id="nav-cauhinh">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    Cấu hình tài khoản
+    <span style="font-size:9px;background:rgba(245,197,24,.2);color:var(--Y);padding:1px 6px;border-radius:100px;margin-left:auto;font-weight:700;">ADMIN</span>
+  </div>
+  <div class="sidebar-foot">
+    <div class="user-row">
+      <div class="u-av" id="sideAv" style="background:var(--Y);color:#181C28;">AD</div>
+      <div style="overflow:hidden;"><div class="u-name" id="sideName">Admin</div><div class="u-tag" id="sideTag" style="background:rgba(245,197,24,.2);color:#c4a000;">Quản trị viên</div></div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="breadcrumb">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      <span>Trang chủ</span><span class="sep">›</span><span class="cur" id="bcCur">Thay đổi thông tin</span>
+    </div>
+    <div class="topbar-r">
+      <div class="sync-dot none" id="syncDot">
+        <div class="dot"></div>
+        <span id="syncTxt">Chưa kết nối Sheets</span>
+      </div>
+      <div class="search-w">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Tìm Mã TID..." id="searchInput" oninput="filterTable()">
+      </div>
+      <div class="role-sw" style="display:none;" id="roleSwitcher">
+        <label>Vai trò:</label>
+        <select id="roleSelect" onchange="switchRole(this.value)">
+          <option value="admin">Admin</option>
+          <option value="op">Team OP</option>
+          <option value="risk">Team Rủi ro</option>
+          <option value="viewer">Viewer</option>
+        </select>
+      </div>
+      <!-- User menu -->
+      <div class="topbar-user" id="topbarUser" onclick="toggleUserMenu()">
+        <div class="av" id="topAv" style="background:#E2E8F4;color:#7A82A0;">👤</div>
+        <div><div class="uname" id="topName">Đăng nhập</div><div class="urole" id="topRole">Nhấn để đăng nhập</div></div>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--TM);"><polyline points="6 9 12 15 18 9"/></svg>
+        <div class="user-menu" id="userMenu">
+          <!-- Guest menu -->
+          <div id="menuGuest">
+            <div class="um-item" onclick="requireLogin('Đăng nhập để thực hiện các thao tác.',()=>{});toggleUserMenu()">🔐 Đăng nhập</div>
+          </div>
+          <!-- Logged-in menu (hidden by default) -->
+          <div id="menuLoggedIn" style="display:none;">
+            <div class="um-item" onclick="openChangePw();toggleUserMenu()">🔑 Đổi mật khẩu</div>
+            <div class="um-div"></div>
+            <div class="um-item danger" onclick="doLogout()">🚪 Đăng xuất</div>
+          </div>
+        </div>
+      </div>
+      <div class="chip">KOOTORO VIỆT NAM</div>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- ═══ PAGE: THAY ĐỔI THÔNG TIN ═══ -->
+    <div id="page-thaydoi">
+      <div class="ph">
+        <div><div class="ph-title">Thay đổi thông tin</div><div class="ph-sub">Quản lý yêu cầu thay đổi theo luồng phân quyền</div></div>
+        <button class="btn btn-p" id="btnCreate" onclick="openCreate()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Tạo yêu cầu
+        </button>
+      </div>
+      <div class="flow-bar">
+        <span class="fs-lbl">Luồng:</span>
+        <div class="fs-box fs1"><span>① Chờ xử lý</span><span class="fs-who">Team OP tạo</span></div>
+        <span class="fs-arr">→</span>
+        <div class="fs-box fs2"><span>② Đang xử lý</span><span class="fs-who">Team OP tiếp nhận</span></div>
+        <span class="fs-arr">→</span>
+        <div class="fs-box fs3"><span>③ Chờ Rủi ro</span><span class="fs-who">Team OP đã xử lý</span></div>
+        <span class="fs-arr">→</span>
+        <div class="fs-box fs4"><span>④ Hoàn thành</span><span class="fs-who">Team Rủi ro xác nhận</span></div>
+        <span class="fs-div">|</span>
+        <div class="fs-box fsx" style="font-size:10px;">Từ chối / Hủy (bất kỳ bước)</div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div><div class="sv" id="stTotal">0</div><div class="sl">Tổng</div></div><div class="si iy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div></div>
+        <div class="stat"><div><div class="sv" id="stWait">0</div><div class="sl">Chờ xử lý</div></div><div class="si iy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div>
+        <div class="stat"><div><div class="sv" id="stProc">0</div><div class="sl">Đang xử lý</div></div><div class="si ib"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></div></div>
+        <div class="stat"><div><div class="sv" id="stDone">0</div><div class="sl">Hoàn thành</div></div><div class="si ig"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div></div>
+        <div class="stat"><div><div class="sv" id="stCancel">0</div><div class="sl">Từ chối/Hủy</div></div><div class="si ir"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div></div>
+      </div>
+      <div class="fcard">
+        <div class="fgrid">
+          <div class="fl"><label>Mã TID</label><input class="fi" type="text" id="fTid" placeholder="Nhập mã TID..." oninput="filterTable()"></div>
+          <div class="fl"><label>Ngày tạo</label><div class="dr"><input type="date" id="fD1"><span class="drs">→</span><input type="date" id="fD2"></div></div>
+          <div class="fl"><label>Loại yêu cầu</label><select class="fs-el" id="fType" onchange="filterTable()"><option value="">Tất cả</option></select></div>
+          <div class="fl"><label>Trạng thái</label>
+            <select class="fs-el" id="fStatus" onchange="filterTable()">
+              <option value="">Tất cả</option>
+              <option value="wait">Chờ xử lý</option>
+              <option value="proc">Đang xử lý</option>
+              <option value="risk">Chờ Rủi ro</option>
+              <option value="done">Hoàn thành</option>
+              <option value="cancel">Từ chối/Hủy</option>
+            </select>
+          </div>
+          <div class="fl"><label>&nbsp;</label><button class="btn btn-p" style="padding:8px 14px;" onclick="filterTable()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Tìm</button></div>
+        </div>
+      </div>
+      <div class="tc">
+        <div class="t-bar">
+          <div class="t-cnt">Hiển thị <strong id="showCnt">0</strong> yêu cầu</div>
+          <div class="t-acts">
+            <button class="bi" title="Xuất Excel" onclick="exportCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+            <button class="bi" title="Làm mới" onclick="renderTable()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead><tr>
+              <th>Trạng thái</th><th>Mã TID</th><th>Loại yêu cầu</th><th>Tiêu đề</th>
+              <th>Giá trị cũ</th><th>Giá trị mới</th><th>Ngày tạo</th><th>Người tạo</th><th>Hành động</th>
+            </tr></thead>
+            <tbody id="tBody"></tbody>
+          </table>
+        </div>
+        <div class="pag"><span id="pagInfo">Trang 1 / 1</span><div class="pnums" id="pagNums"></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ PAGE: TỔNG QUAN ═══ -->
+    <div id="page-tongquan" style="display:none;">
+      <div class="ph"><div><div class="ph-title">Tổng quan</div><div class="ph-sub">Dashboard hoạt động</div></div></div>
+      <div class="tc"><div class="empty"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><p>Dashboard đang phát triển</p></div></div>
+    </div>
+
+    <!-- ═══ PAGE: CẤU HÌNH ═══ -->
+    <div id="page-cauhinh" style="display:none;">
+      <div class="ph">
+        <div><div class="ph-title">Cấu hình tài khoản</div><div class="ph-sub">Quản lý tài khoản, phân quyền và cài đặt hệ thống</div></div>
+      </div>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('accounts')">👤 Tài khoản</button>
+        <button class="tab-btn" onclick="switchTab('types')">🏷️ Loại yêu cầu</button>
+        <button class="tab-btn" onclick="switchTab('perms')">🔐 Phân quyền</button>
+        <button class="tab-btn" onclick="switchTab('connect')">☁️ Google Sheets</button>
+      </div>
+
+      <!-- TAB: ACCOUNTS -->
+      <div class="tab-cnt active" id="tab-accounts">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:14px;">
+          <button class="btn btn-p" id="btnCreateAcc" onclick="openAccModal()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Tạo tài khoản
+          </button>
+        </div>
+        <div class="acc-grid" id="accGrid"></div>
+      </div>
+
+      <!-- TAB: TYPES -->
+      <div class="tab-cnt" id="tab-types">
+        <div class="fcard">
+          <div style="font-size:13px;font-weight:700;margin-bottom:4px;">Danh sách Loại yêu cầu</div>
+          <div style="font-size:12px;color:var(--TM);margin-bottom:14px;">Các loại này sẽ hiển thị trong form Tạo yêu cầu. Có thể thêm/xóa tùy ý.</div>
+          <div class="type-list" id="typeList"></div>
+          <div class="add-type">
+            <input type="text" id="newTypeInput" placeholder="Nhập tên loại yêu cầu mới..." onkeydown="if(event.key==='Enter')addType()">
+            <button class="btn btn-p" onclick="addType()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Thêm
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: PERMS -->
+      <div class="tab-cnt" id="tab-perms">
+        <div class="fcard">
+          <div style="font-size:13px;font-weight:700;margin-bottom:14px;">Bảng phân quyền chức năng</div>
+          <table class="perm-table">
+            <thead><tr><th>Chức năng</th><th>Admin</th><th>Team OP</th><th>Team Rủi ro</th><th>Viewer</th></tr></thead>
+            <tbody>
+              <tr><td>Tạo yêu cầu thay đổi</td><td>✅</td><td>✅</td><td>❌</td><td>❌</td></tr>
+              <tr><td>Tiếp nhận / Từ chối (bước 1→2)</td><td>✅</td><td>✅</td><td>❌</td><td>❌</td></tr>
+              <tr><td>Đã xử lý / Hủy (bước 2→3)</td><td>✅</td><td>✅</td><td>❌</td><td>❌</td></tr>
+              <tr><td>Xác nhận / Từ chối (bước 3→4, Team Rủi ro)</td><td>✅</td><td>❌</td><td>✅</td><td>❌</td></tr>
+              <tr><td>Xem danh sách yêu cầu</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+              <tr><td>Quản lý tài khoản & phân quyền</td><td>✅</td><td>❌</td><td>❌</td><td>❌</td></tr>
+              <tr><td>Cấu hình Loại yêu cầu</td><td>✅</td><td>❌</td><td>❌</td><td>❌</td></tr>
+              <tr><td>Cài đặt Google Sheets</td><td>✅</td><td>❌</td><td>❌</td><td>❌</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB: CONNECT -->
+      <div class="tab-cnt" id="tab-connect">
+        <div class="fcard">
+          <div style="font-size:13px;font-weight:700;margin-bottom:4px;">Kết nối Google Sheets</div>
+          <div style="font-size:12px;color:var(--TM);margin-bottom:16px;">Dữ liệu sẽ được đồng bộ tự động sau mỗi thao tác.</div>
+          <div class="conn-status none" id="connStatus">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="connStatusTxt">Chưa cấu hình URL Apps Script</span>
+          </div>
+
+          <!-- URL + Token -->
+          <div class="fgrp">
+            <label>URL Google Apps Script Web App</label>
+            <input type="url" id="scriptUrl" placeholder="https://script.google.com/macros/s/YOUR_ID/exec" value="">
+          </div>
+          <div class="fgrp">
+            <label>🔐 Secret Token <span style="font-weight:400;color:var(--TM);font-style:italic;">(phải khớp với token trong Apps Script)</span></label>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="secretToken" placeholder="Nhập hoặc tạo token ngẫu nhiên..." style="flex:1;padding:9px 12px;border:1.5px solid var(--BO);border-radius:8px;font-family:'Courier New',monospace;font-size:12px;color:var(--TX);background:#FAFBFD;outline:none;transition:.18s;">
+              <button class="btn btn-g" onclick="generateToken()" title="Tạo token ngẫu nhiên" style="white-space:nowrap;">🎲 Tạo ngẫu nhiên</button>
+              <button class="btn btn-g" onclick="copyToken()" title="Copy token" style="white-space:nowrap;">📋 Copy</button>
+            </div>
+            <div style="font-size:11px;color:var(--TM);margin-top:6px;">⚠️ Sau khi tạo token, copy và dán vào dòng <code style="background:#F4F6FB;padding:1px 5px;border-radius:4px;">const SECRET_TOKEN = '...'</code> trong Apps Script rồi Re-deploy.</div>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-bottom:20px;">
+            <button class="btn btn-p" onclick="saveScriptUrl()">💾 Lưu & Kết nối</button>
+            <button class="btn btn-g" onclick="testConnection()">🔍 Kiểm tra kết nối</button>
+            <button class="btn btn-g" onclick="forceSyncToSheets()">⬆️ Đẩy dữ liệu lên Sheets</button>
+            <button class="btn btn-g" onclick="loadFromSheets()">⬇️ Tải từ Sheets</button>
+          </div>
+          <div style="background:#FFF8E1;border:1.5px solid #F6D860;border-radius:9px;padding:14px 16px;margin-bottom:14px;font-size:12px;color:#7A6200;">
+            <div style="font-weight:800;margin-bottom:6px;">⚡ Lỗi "You do not have permission to call DriveApp"?</div>
+            <div>→ Bạn chưa cấp quyền Drive cho script. Làm bước <strong>3</strong> bên dưới trước khi Deploy!</div>
+          </div>
+          <div style="font-size:12px;font-weight:700;color:var(--TL);margin-bottom:8px;">📋 Hướng dẫn cài đặt (làm đúng thứ tự):</div>
+          <ol style="font-size:12px;color:var(--TM);line-height:2.2;padding-left:18px;margin-bottom:10px;">
+            <li>Nhấn <strong>🎲 Tạo ngẫu nhiên</strong> để tạo Secret Token → <strong>📋 Copy</strong></li>
+            <li>Mở Google Sheets → <strong>Extensions → Apps Script</strong></li>
+            <li>Xóa code mặc định → nhấn <strong>Copy</strong> bên dưới → dán vào → <strong>Save (Ctrl+S)</strong></li>
+            <li style="color:#C53030;font-weight:700;">🔐 Tìm dòng <code style="background:#FFF5F5;padding:1px 6px;border-radius:4px;font-size:11px;">const SECRET_TOKEN = 'THAY_BANG_TOKEN_CUA_BAN'</code> → thay bằng token vừa copy</li>
+            <li style="color:#276749;font-weight:700;">⚡ Chọn hàm <code style="background:#F0FFF4;padding:1px 6px;border-radius:4px;font-size:11px;">setup</code> → nhấn <strong>Run ▶</strong> → <strong>Allow</strong></li>
+            <li>Click <strong>Deploy → New Deployment → Web App</strong> | Execute as: <strong>Me</strong> | Access: <strong>Anyone</strong></li>
+            <li>Copy URL → dán vào ô URL trên → nhấn <strong>💾 Lưu & Kết nối</strong></li>
+          </ol>
+          <div class="code-block" id="appsScriptCode">
+            <button class="copy-btn" onclick="copyScript()">Copy</button>
+            <pre id="scriptPre"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /content -->
+</main>
+
+<!-- ═══ MODAL: ĐỔI MẬT KHẨU ═══ -->
+<div class="overlay" id="mChangePw" onclick="closeIfOv(event,'mChangePw')">
+  <div class="modal" style="width:380px;">
+    <div class="mh"><div class="mt">Đổi mật khẩu</div><button class="mx" onclick="closeM('mChangePw')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="fgrp"><label>Mật khẩu hiện tại *</label><input id="pwOld" type="password" placeholder="Nhập mật khẩu hiện tại"></div>
+    <div class="fgrp"><label>Mật khẩu mới *</label><input id="pwNew" type="password" placeholder="Tối thiểu 6 ký tự"></div>
+    <div class="fgrp"><label>Xác nhận mật khẩu mới *</label><input id="pwCfm" type="password" placeholder="Nhập lại mật khẩu mới"></div>
+    <div class="mf">
+      <button class="btn-cm" onclick="closeM('mChangePw')">Hủy</button>
+      <button class="btn-ok" onclick="doChangePw()">Cập nhật</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-w" id="toastW"></div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('show')">
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<!-- ═══ MODAL: TẠO YÊU CẦU ═══ -->
+<div class="overlay" id="mCreate" onclick="closeIfOv(event,'mCreate')">
+  <div class="modal" style="width:540px;">
+    <div class="mh"><div class="mt">Tạo yêu cầu thay đổi</div><button class="mx" onclick="closeM('mCreate')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="fg">
+      <div class="fgrp"><label>Mã TID *</label><input id="cTid" type="text" placeholder="VD: TID2026050001"></div>
+      <div class="fgrp"><label>Loại yêu cầu *</label><select id="cType"></select></div>
+      <div class="fgrp"><label>Giá trị cũ</label><input id="cOld" type="text" placeholder="Thông tin hiện tại"></div>
+      <div class="fgrp"><label>Giá trị mới</label><input id="cNew" type="text" placeholder="Thông tin muốn thay đổi"></div>
+    </div>
+    <div class="fgrp"><label>Tiêu đề *</label><input id="cTitle" type="text" placeholder="Nhập tiêu đề mô tả yêu cầu..."></div>
+    <div class="fgrp"><label>Mô tả <span class="opt">(không bắt buộc)</span></label><textarea id="cDesc" rows="3" placeholder="Mô tả chi tiết thêm nếu cần..."></textarea></div>
+    <div class="fgrp">
+      <label>Đính kèm hình ảnh <span class="opt">(paste Ctrl+V hoặc click)</span></label>
+      <div id="driveWarnBanner" style="display:none;background:#FFF8E1;border:1.5px solid #F6D860;border-radius:8px;padding:9px 13px;margin-bottom:8px;font-size:11px;color:#7A6200;display:flex;align-items:center;gap:8px;">
+        <span>⚠️</span>
+        <span>Chưa kết nối Google Drive — ảnh chỉ lưu tạm trong trình duyệt.</span>
+        <span onclick="gotoPage('cauhinh');setTimeout(()=>switchTab('connect'),100);closeM('mCreate');" style="cursor:pointer;font-weight:700;text-decoration:underline;margin-left:auto;white-space:nowrap;">Cài đặt ngay →</span>
+      </div>
+      <div class="paste-zone" id="pasteZone" onclick="document.getElementById('fileIn').click()" tabindex="0">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4;margin:0 auto;display:block;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <div class="paste-hint">Click hoặc Paste ảnh (Ctrl+V) vào đây</div>
+      </div>
+      <input type="file" id="fileIn" accept="image/*" multiple style="display:none" onchange="handleFiles(this.files)">
+      <div class="img-previews" id="imgPreviews"></div>
+    </div>
+    <div class="mf">
+      <button class="btn-cm" onclick="closeM('mCreate')">Hủy bỏ</button>
+      <button class="btn-ok" onclick="submitCreate()">Gửi yêu cầu</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: CHI TIẾT ═══ -->
+<div class="overlay" id="mDetail" onclick="closeIfOv(event,'mDetail')">
+  <div class="modal detail-modal">
+    <div class="mh"><div class="mt" id="detTitle">Chi tiết yêu cầu</div><button class="mx" onclick="closeM('mDetail')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="modal-body" id="detBody"></div>
+    <div class="mf"><button class="btn-ok" onclick="closeM('mDetail')">Đóng</button></div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: XÁC NHẬN HÀNH ĐỘNG ═══ -->
+<div class="overlay" id="mConfirm" onclick="closeIfOv(event,'mConfirm')">
+  <div class="modal c-modal">
+    <div class="mh" style="justify-content:flex-end;margin-bottom:0;"><button class="mx" onclick="closeM('mConfirm')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="c-icon" id="cIcon"></div>
+    <div class="c-title" id="cTitle2"></div>
+    <div class="c-sub" id="cSub"></div>
+    <div class="c-code" id="cCode"></div>
+    <div class="mf" style="justify-content:center;">
+      <button class="btn-cm" onclick="closeM('mConfirm')">Quay lại</button>
+      <button class="btn-ok" id="cOkBtn" onclick="doConfirm()">Xác nhận</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: TỪ CHỐI / HỦY (có ghi chú) ═══ -->
+<div class="overlay" id="mReject" onclick="closeIfOv(event,'mReject')">
+  <div class="modal c-modal">
+    <div class="mh"><div class="mt" id="rejTitle">Ghi chú từ chối</div><button class="mx" onclick="closeM('mReject')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div style="background:#FFF5F5;border:1.5px solid #FEB2B2;border-radius:9px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#9B2C2C;display:flex;align-items:center;gap:8px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span>Hành động này <strong>không thể hoàn tác</strong>. Vui lòng ghi rõ lý do.</span>
+    </div>
+    <div class="fgrp"><label>Lý do từ chối / hủy *</label><textarea id="rejNote" rows="4" placeholder="Nhập lý do cụ thể tại đây..."></textarea></div>
+    <div class="c-code" id="rejCode" style="margin-bottom:0;"></div>
+    <div class="mf">
+      <button class="btn-cm" onclick="closeM('mReject')">Quay lại</button>
+      <button class="btn-ok danger" onclick="doReject()">Xác nhận từ chối</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: TÀI KHOẢN ═══ -->
+<div class="overlay" id="mAcc" onclick="closeIfOv(event,'mAcc')">
+  <div class="modal" style="width:460px;">
+    <div class="mh"><div class="mt" id="accMTitle">Tạo tài khoản mới</div><button class="mx" onclick="closeM('mAcc')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <input type="hidden" id="accEditId">
+    <div class="fg">
+      <div class="fgrp"><label>Họ và tên *</label><input id="aN" type="text" placeholder="Nguyễn Văn A"></div>
+      <div class="fgrp"><label>Email (Gmail) *</label><input id="aE" type="email" placeholder="user@gmail.com"></div>
+      <div class="fgrp"><label>Tên đăng nhập</label><input id="aU" type="text" placeholder="nguyen.van.a (để trống = dùng email)"></div>
+      <div class="fgrp"><label>Mật khẩu *</label><input id="aP" type="password" placeholder="Tối thiểu 6 ký tự"></div>
+      <div class="fgrp"><label>Bộ phận</label><input id="aD" type="text" placeholder="Vận hành, Rủi ro..."></div>
+    </div>
+    <div class="fgrp"><label>Vai trò & Quyền hạn *</label>
+      <select id="aR">
+        <option value="">-- Chọn vai trò --</option>
+        <option value="admin">Admin (Quản trị viên) — Toàn quyền</option>
+        <option value="op">Team OP (Vận hành) — Tạo & xử lý bước 1,2</option>
+        <option value="risk">Team Rủi ro — Xác nhận bước 3</option>
+        <option value="viewer">Viewer — Chỉ xem</option>
+      </select>
+    </div>
+    <div class="mf">
+      <button class="btn-cm" onclick="closeM('mAcc')">Hủy</button>
+      <button class="btn-ok" onclick="submitAcc()">Lưu tài khoản</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+const S = {
+  role: 'admin',
+  currentUser: null,   // { id, name, email, username, role, dept }
+  requests: [],
+  accounts: [],
+  images: {},
+  config: {
+    requestTypes: ['Thay đổi địa chỉ','Thay đổi người nhận','Thay đổi thông tin','Giao gấp'],
+    scriptUrl: '',
+    secretToken: '',
+  },
+  pendingAction: null,
+  pendingReject: null,
+  editImages: [],
+};
+
+const ROLES_CFG = {
+  admin:  { label:'Quản trị viên', short:'AD', bg:'var(--Y)',   color:'#181C28', tagBg:'rgba(245,197,24,.2)', tagColor:'#c4a000' },
+  op:     { label:'Team OP',       short:'OP', bg:'#3182CE',    color:'#fff',    tagBg:'rgba(49,130,206,.15)', tagColor:'#2B6CB0' },
+  risk:   { label:'Team Rủi ro',   short:'RR', bg:'#7C3AED',    color:'#fff',    tagBg:'rgba(124,58,237,.15)', tagColor:'#6B21A8' },
+  viewer: { label:'Viewer',        short:'VW', bg:'#A0AEC0',    color:'#fff',    tagBg:'rgba(160,174,192,.15)', tagColor:'#718096' },
+};
+
+const STATUSES = {
+  wait:   { label:'Chờ xử lý',  cls:'bw' },
+  proc:   { label:'Đang xử lý', cls:'bp' },
+  risk:   { label:'Chờ Rủi ro', cls:'br' },
+  done:   { label:'Hoàn thành', cls:'bd' },
+  cancel: { label:'Từ chối/Hủy',cls:'bc' },
+};
+
+const CAN = {
+  create:   ['admin','op'],
+  receive:  ['admin','op'],
+  process:  ['admin','op'],
+  confirm:  ['admin','risk'],
+  manageAcc:['admin'],
+  manageTypes:['admin'],
+  connect:  ['admin'],
+};
+const can = a => CAN[a]?.includes(S.role);
+
+const AV_COLORS = ['#3182CE','#38A169','#D69E2E','#7C3AED','#E53E3E','#DD6B20','#319795','#E53E3E'];
+
+// ══════════════════════════════════════════
+// APPS SCRIPT CODE (to display & copy)
+// ══════════════════════════════════════════
+const APPS_SCRIPT = `// ═══════════════════════════════════════════════════
+// DataFlow Management — Google Apps Script
+// Sheet ID: 1msOvb0xSHRtmvUVMplRdoebOV2usXp_694BZ7RZ3T7I
+// ═══════════════════════════════════════════════════
+const SPREADSHEET_ID  = '1msOvb0xSHRtmvUVMplRdoebOV2usXp_694BZ7RZ3T7I';
+const DRIVE_FOLDER_NAME = 'DataFlow_Images';
+
+// 🔐 ĐỔI CHUỖI NÀY THÀNH MẬT KHẨU RIÊNG CỦA BẠN
+// Phải khớp với Secret Token đã nhập trong trang cài đặt
+const SECRET_TOKEN = 'THAY_BANG_TOKEN_CUA_BAN';
+
+// ── Kiểm tra token ──
+function verifyToken(token) {
+  return token === SECRET_TOKEN;
+}
+
+// ⚡ BƯỚC BẮT BUỘC: Chạy hàm này 1 lần để cấp quyền Drive
+function setup() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  Logger.log('Sheets OK: ' + ss.getName());
+  const folders = DriveApp.getFoldersByName(DRIVE_FOLDER_NAME);
+  const folder = folders.hasNext()
+    ? folders.next()
+    : DriveApp.createFolder(DRIVE_FOLDER_NAME);
+  Logger.log('Drive OK — Folder: ' + folder.getName());
+  Logger.log('✅ Cấp quyền thành công! Bây giờ Deploy lại Web App.');
+}
+
+// ── GET: Tải dữ liệu ──
+function doGet(e) {
+  if (!verifyToken(e.parameter.token)) {
+    return output({ error: 'UNAUTHORIZED', message: 'Token không hợp lệ' });
+  }
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    return output({
+      requests: readSheet(ss, 'Requests'),
+      accounts: readSheet(ss, 'Accounts'),
+      config:   readSheet(ss, 'Config'),
+    });
+  } catch(err) {
+    return output({ error: err.message });
+  }
+}
+
+// ── POST: Ghi dữ liệu / upload ảnh ──
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    if (!verifyToken(data.token)) {
+      return output({ error: 'UNAUTHORIZED', message: 'Token không hợp lệ' });
+    }
+    if (data.action === 'uploadImage') return doUploadImage(data);
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    if (data.requests !== undefined) writeSheet(ss, 'Requests', data.requests);
+    if (data.accounts !== undefined) writeSheet(ss, 'Accounts', data.accounts);
+    if (data.config   !== undefined) writeSheet(ss, 'Config',   data.config);
+    return output({ success: true });
+  } catch(err) {
+    return output({ error: err.message });
+  }
+}
+
+// ── Upload ảnh → Drive ──
+function doUploadImage(data) {
+  try {
+    const folder  = getOrCreateFolder();
+    const decoded = Utilities.base64Decode(data.base64);
+    const blob    = Utilities.newBlob(decoded, data.mimeType || 'image/jpeg', data.filename || ('img_' + Date.now() + '.jpg'));
+    const file    = folder.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    const fileId  = file.getId();
+    const url     = 'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w1200';
+    return output({ success: true, url, fileId, folder: DRIVE_FOLDER_NAME });
+  } catch(err) {
+    return output({ error: err.message });
+  }
+}
+
+function getOrCreateFolder() {
+  const folders = DriveApp.getFoldersByName(DRIVE_FOLDER_NAME);
+  return folders.hasNext() ? folders.next() : DriveApp.createFolder(DRIVE_FOLDER_NAME);
+}
+
+function readSheet(ss, name) {
+  const sh = ss.getSheetByName(name);
+  if (!sh) return [];
+  const d = sh.getDataRange().getValues();
+  if (d.length < 2) return [];
+  const headers = d[0];
+  return d.slice(1).map(row => {
+    const obj = {};
+    headers.forEach((h, i) => {
+      try { obj[h] = JSON.parse(row[i]); }
+      catch(e) { obj[h] = (row[i] === '') ? null : row[i]; }
+    });
+    return obj;
+  });
+}
+
+function writeSheet(ss, name, records) {
+  let sh = ss.getSheetByName(name) || ss.insertSheet(name);
+  sh.clearContents();
+  if (!records || !records.length) return;
+  const headers = Object.keys(records[0]);
+  sh.getRange(1, 1, 1, headers.length).setValues([headers]);
+  const rows = records.map(r =>
+    headers.map(h => {
+      const v = r[h];
+      return (v === null || v === undefined) ? '' :
+             (typeof v === 'object' ? JSON.stringify(v) : v);
+    })
+  );
+  if (rows.length) sh.getRange(2, 1, rows.length, headers.length).setValues(rows);
+}
+
+function output(data) {
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}`;
+
+// ── Chuẩn hoá ngày về YYYY-MM-DD ──
+function normalizeDate(d) {
+  if (!d) return new Date().toISOString().slice(0,10);
+  // Nếu là Date object hoặc timestamp
+  if (d instanceof Date) return d.toISOString().slice(0,10);
+  const s = String(d);
+  // Đã đúng định dạng YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // Thử parse
+  const parsed = new Date(s);
+  if (!isNaN(parsed)) return parsed.toISOString().slice(0,10);
+  return new Date().toISOString().slice(0,10);
+}
+
+function nowStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0') + ' ' +
+    String(d.getHours()).padStart(2,'0') + ':' +
+    String(d.getMinutes()).padStart(2,'0');
+}
+// ══════════════════════════════════════════
+// INIT & PERSISTENCE
+// ══════════════════════════════════════════
+const APP_VERSION = '1.4'; // tăng số này khi cần reset localStorage
+
+function saveLocal() {
+  localStorage.setItem('df_requests', JSON.stringify(S.requests));
+  localStorage.setItem('df_accounts', JSON.stringify(S.accounts));
+  localStorage.setItem('df_config',   JSON.stringify(S.config));
+  // Lưu Drive URLs; nếu chưa có Drive URL thì giữ dataUrl nén (đã compress ~72% rồi)
+  // Không lưu ảnh gốc base64 chưa nén để tránh đầy localStorage
+  try {
+    localStorage.setItem('df_images', JSON.stringify(S.images));
+  } catch(e) {
+    // localStorage đầy → chỉ lưu Drive URLs
+    const imgSafe = {};
+    Object.entries(S.images).forEach(([k, arr]) => {
+      imgSafe[k] = arr.filter(u => u && u.startsWith('http'));
+    });
+    localStorage.setItem('df_images', JSON.stringify(imgSafe));
+    toast('⚠️ localStorage đầy — một số ảnh local bị bỏ qua. Hãy kết nối Drive!', 'err');
+  }
+}
+
+function loadLocal() {
+  // Xóa cache nếu version cũ hơn
+  const savedVer = localStorage.getItem('df_version');
+  if (savedVer !== APP_VERSION) {
+    ['df_accounts','df_requests','df_config','df_images'].forEach(k => localStorage.removeItem(k));
+    localStorage.setItem('df_version', APP_VERSION);
+  }
+
+  try {
+    const r = localStorage.getItem('df_requests');
+    const a = localStorage.getItem('df_accounts');
+    const c = localStorage.getItem('df_config');
+    const i = localStorage.getItem('df_images');
+    if (r) S.requests = JSON.parse(r);
+    if (a) S.accounts = JSON.parse(a);
+    if (c) S.config   = Object.assign(S.config, JSON.parse(c));
+    if (i) S.images   = JSON.parse(i);
+  } catch(e) {}
+
+  // Migration: nếu tài khoản cũ không có password → reset về default
+  const needsMigration = S.accounts.some(a => !a.username);
+  if (needsMigration || !S.accounts.length) {
+    // KHÔNG lưu mật khẩu mặc định trong code
+    // Admin sẽ tự tạo tài khoản qua Google Sheets hoặc lần đầu đăng nhập
+    S.accounts = [
+      { id:'a1', name:'Admin', email:'admin@kootoro.vn', username:'admin', password:'', dept:'Ban Giám đốc', role:'admin', mustChangePw: true },
+    ];
+    localStorage.setItem('df_accounts', JSON.stringify(S.accounts));
+  }
+
+  // Normalize dates + ensure history exists on all requests
+  S.requests = S.requests.map(r => ({
+    ...r,
+    date: normalizeDate(r.date),
+    history: Array.isArray(r.history) ? r.history : [{action:'Tạo yêu cầu',user:r.creator||'—',role:'—',time:normalizeDate(r.date)+' 00:00',note:''}],
+  }));
+
+  if (!S.accounts.length) S.accounts = [
+    { id:'a1', name:'Nguyễn Văn Admin', email:'admin@kootoro.vn', username:'admin', password:'admin123', dept:'Ban Giám đốc', role:'admin' },
+    { id:'a2', name:'Trần Thị Bình',    email:'binh@kootoro.vn',  username:'binh.tran', password:'op123', dept:'Vận hành', role:'op' },
+    { id:'a3', name:'Lê Văn Cường',     email:'cuong@kootoro.vn', username:'cuong.le', password:'op123', dept:'Vận hành', role:'op' },
+    { id:'a4', name:'Phạm Thị Dung',    email:'dung@kootoro.vn',  username:'dung.pham', password:'risk123', dept:'Rủi ro', role:'risk' },
+    { id:'a5', name:'Hoàng Văn Em',     email:'em@kootoro.vn',    username:'em.hoang', password:'view123', dept:'Kinh doanh', role:'viewer' },
+  ];
+
+  if (!S.requests.length) S.requests = [];
+}
+
+// ══════════════════════════════════════════
+// GOOGLE SHEETS SYNC
+// ══════════════════════════════════════════
+function setSyncStatus(state, txt) {
+  const dot = document.getElementById('syncDot');
+  const t = document.getElementById('syncTxt');
+  dot.className = 'sync-dot ' + state;
+  t.textContent = txt;
+}
+
+async function loadFromSheets() {
+  const url = S.config.scriptUrl;
+  if (!url) { toast('Chưa cấu hình URL Google Apps Script', 'err'); return; }
+  setSyncStatus('syncing','Đang tải dữ liệu...');
+  try {
+    const tokenParam = S.config.secretToken ? `&token=${encodeURIComponent(S.config.secretToken)}` : '';
+    const res = await fetch(url + '?action=load' + tokenParam, { mode:'cors' });
+    const data = await res.json();
+    if (data.error === 'UNAUTHORIZED') throw new Error('Token không hợp lệ — kiểm tra lại Secret Token');
+    if (data.error) throw new Error(data.error);
+    if (data.requests?.length) S.requests = data.requests;
+    if (data.accounts?.length) S.accounts = data.accounts;
+    if (data.config?.length) {
+      data.config.forEach(row => {
+        if (row.key === 'requestTypes') try { S.config.requestTypes = JSON.parse(row.value); } catch(e){}
+      });
+    }
+    saveLocal();
+    renderAll();
+    setSyncStatus('synced','Đã đồng bộ: ' + new Date().toLocaleTimeString('vi'));
+    toast('✅ Đã tải dữ liệu từ Google Sheets', 'ok');
+  } catch(e) {
+    setSyncStatus('error','Lỗi kết nối Sheets');
+    toast('❌ Lỗi tải Sheets: ' + e.message, 'err');
+  }
+}
+
+async function syncToSheets() {
+  const url = S.config.scriptUrl;
+  if (!url) return;
+  setSyncStatus('syncing','Đang đồng bộ...');
+  try {
+    // Tách thông tin nhạy cảm: lưu accounts đầy đủ (có password) vào sheet riêng
+    const payload = {
+      token: S.config.secretToken || '',
+      requests: S.requests.map(r => ({ ...r })),
+      accounts: S.accounts,  // bao gồm password để đồng bộ qua máy
+      config: [{ key:'requestTypes', value: JSON.stringify(S.config.requestTypes) }],
+    };
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload),
+      redirect: 'follow',
+    });
+    setSyncStatus('synced','Đã đồng bộ: ' + new Date().toLocaleTimeString('vi'));
+  } catch(e) {
+    setSyncStatus('error','Lỗi đồng bộ: ' + e.message);
+  }
+}
+
+function forceSyncToSheets() { syncToSheets(); toast('⬆️ Đang đẩy dữ liệu lên Sheets...','inf'); }
+
+async function testConnection() {
+  const url   = document.getElementById('scriptUrl').value.trim();
+  const token = document.getElementById('secretToken').value.trim();
+  if (!url) { toast('Nhập URL trước!','err'); return; }
+  if (!token) { toast('Nhập Secret Token trước!','err'); return; }
+  setSyncStatus('syncing','Đang kiểm tra...');
+  try {
+    const res  = await fetch(`${url}?action=load&token=${encodeURIComponent(token)}`, { mode:'cors' });
+    const data = await res.json();
+    if (data.error === 'UNAUTHORIZED') throw new Error('Token không hợp lệ!');
+    if (data.error) throw new Error(data.error);
+    setSyncStatus('synced','Kết nối thành công!');
+    toast('✅ Kết nối & Token hợp lệ!','ok');
+    updateConnStatus(true);
+  } catch(e) {
+    setSyncStatus('error','Kết nối thất bại');
+    toast('❌ ' + e.message,'err');
+    updateConnStatus(false);
+  }
+}
+
+function updateConnStatus(ok) {
+  const el = document.getElementById('connStatus');
+  const txt = document.getElementById('connStatusTxt');
+  if (ok === null) { el.className='conn-status none'; txt.textContent='Chưa cấu hình'; }
+  else if (ok) { el.className='conn-status ok'; txt.textContent='✅ Đã kết nối — Token hợp lệ'; }
+  else { el.className='conn-status fail'; txt.textContent='❌ Không kết nối được — kiểm tra URL và Secret Token'; }
+}
+
+function saveScriptUrl() {
+  const url   = document.getElementById('scriptUrl').value.trim();
+  const token = document.getElementById('secretToken').value.trim();
+  if (url && !token) { toast('⚠️ Vui lòng nhập Secret Token!','err'); return; }
+  S.config.scriptUrl   = url;
+  S.config.secretToken = token;
+  saveLocal();
+  if (url) { loadFromSheets(); }
+  else { toast('Đã xóa URL kết nối','inf'); updateConnStatus(null); }
+}
+
+function generateToken() {
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  const token = Array.from({length: 32}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  document.getElementById('secretToken').value = token;
+  toast('🎲 Token mới đã được tạo — nhớ copy và cập nhật vào Apps Script!','inf');
+}
+
+function copyToken() {
+  const token = document.getElementById('secretToken').value;
+  if (!token) { toast('Chưa có token để copy!','err'); return; }
+  navigator.clipboard.writeText(token).then(() => toast('📋 Đã copy token!','ok'));
+}
+
+// ══════════════════════════════════════════
+// AUTH — LOGIN / LOGOUT
+// ══════════════════════════════════════════
+function doLogin() {
+  const input = document.getElementById('loginUser').value.trim().toLowerCase();
+  const pass  = document.getElementById('loginPass').value;
+  const err   = document.getElementById('loginErr');
+
+  const acc = S.accounts.find(a =>
+    (a.email.toLowerCase() === input ||
+     (a.username && a.username.toLowerCase() === input)) &&
+    a.password === pass
+  );
+  if (!acc) { err.classList.add('show'); return; }
+  err.classList.remove('show');
+  loginAs(acc);
+}
+
+function toggleGmailInput() {
+  const w = document.getElementById('gmailInputWrap');
+  w.style.display = w.style.display === 'none' ? 'block' : 'none';
+  if (w.style.display === 'block') setTimeout(() => document.getElementById('gmailInput').focus(), 50);
+}
+
+function loginWithGoogle() {
+  const email = (document.getElementById('gmailInput').value || '').trim().toLowerCase();
+  if (!email) { toast('Vui lòng nhập địa chỉ Gmail!', 'err'); return; }
+  const acc = S.accounts.find(a => a.email.toLowerCase() === email);
+  if (!acc) {
+    document.getElementById('loginErr').textContent = '❌ Gmail này chưa được đăng ký. Liên hệ Admin.';
+    document.getElementById('loginErr').classList.add('show');
+    return;
+  }
+  document.getElementById('loginErr').classList.remove('show');
+  document.getElementById('gmailInputWrap').style.display = 'none';
+  document.getElementById('gmailInput').value = '';
+  loginAs(acc);
+}
+
+function loginAs(acc) {
+  // Nếu chưa đặt mật khẩu → bắt buộc đặt mật khẩu trước
+  if (!acc.password) {
+    openFirstSetup(acc);
+    return;
+  }
+  S.currentUser = acc;
+  S.role = acc.role;
+  sessionStorage.setItem('df_session', JSON.stringify({ id: acc.id, role: acc.role }));
+  document.getElementById('loginScreen').classList.add('hide');
+  updateUIForUser(acc);
+  renderTable();
+  document.getElementById('btnCreate').disabled = !can('create');
+  toast(`👋 Xin chào, ${acc.name}!`, 'ok');
+  if (S._pendingLoginAction) {
+    const fn = S._pendingLoginAction;
+    S._pendingLoginAction = null;
+    setTimeout(fn, 200);
+  }
+}
+
+function openFirstSetup(acc) {
+  S._firstSetupAcc = acc;
+  // Tái dùng modal đổi mật khẩu nhưng chỉ cần nhập mới
+  document.getElementById('mChangePw').querySelector('.mt').textContent = '🔐 Thiết lập mật khẩu lần đầu';
+  document.getElementById('pwOld').style.display = 'none';
+  document.getElementById('pwOld').previousElementSibling.style.display = 'none';
+  document.getElementById('pwNew').value = '';
+  document.getElementById('pwCfm').value = '';
+  // Override nút xác nhận
+  document.getElementById('mChangePw').querySelector('.btn-ok').onclick = doFirstSetup;
+  openM('mChangePw');
+}
+
+function doFirstSetup() {
+  const nw  = document.getElementById('pwNew').value;
+  const cfm = document.getElementById('pwCfm').value;
+  if (nw.length < 6) { toast('Mật khẩu tối thiểu 6 ký tự!', 'err'); return; }
+  if (nw !== cfm)    { toast('Mật khẩu xác nhận không khớp!', 'err'); return; }
+  const acc = S._firstSetupAcc;
+  acc.password = nw;
+  S._firstSetupAcc = null;
+  // Reset modal về state bình thường
+  document.getElementById('mChangePw').querySelector('.mt').textContent = 'Đổi mật khẩu';
+  document.getElementById('pwOld').style.display = '';
+  document.getElementById('pwOld').previousElementSibling.style.display = '';
+  document.getElementById('mChangePw').querySelector('.btn-ok').onclick = doChangePw;
+  closeM('mChangePw');
+  saveLocal(); syncToSheets();
+  toast('✅ Đã thiết lập mật khẩu! Đang đăng nhập...', 'ok');
+  setTimeout(() => loginAs(acc), 300);
+}
+
+// Hiện login popup với context message, lưu pending action để resume sau
+function requireLogin(msg, afterLoginFn) {
+  if (S.currentUser) { afterLoginFn(); return; }
+  S._pendingLoginAction = afterLoginFn;
+  document.getElementById('loginContext').textContent = '🔒 ' + (msg || 'Bạn cần đăng nhập để thực hiện thao tác này.');
+  document.getElementById('loginErr').classList.remove('show');
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('gmailInputWrap').style.display = 'none';
+  document.getElementById('gmailInput').value = '';
+  document.getElementById('loginScreen').classList.remove('hide');
+}
+
+function doLogout() {
+  S.currentUser = null;
+  S.role = 'viewer';
+  S._pendingLoginAction = null;
+  sessionStorage.removeItem('df_session');
+  document.getElementById('loginScreen').classList.add('hide');
+  document.getElementById('userMenu').classList.remove('show');
+  // Reset topbar to guest
+  document.getElementById('topAv').textContent = '👤';
+  document.getElementById('topAv').style.background = '#E2E8F4';
+  document.getElementById('topAv').style.color = '#7A82A0';
+  document.getElementById('topName').textContent = 'Đăng nhập';
+  document.getElementById('topRole').textContent = 'Nhấn để đăng nhập';
+  // Show guest menu, hide logged-in menu
+  document.getElementById('menuGuest').style.display = 'block';
+  document.getElementById('menuLoggedIn').style.display = 'none';
+  // Reset sidebar
+  document.getElementById('sideAv').textContent = '?';
+  document.getElementById('sideAv').style.background = '#2A2D38';
+  document.getElementById('sideAv').style.color = '#8B91A8';
+  document.getElementById('sideName').textContent = 'Chưa đăng nhập';
+  const tag = document.getElementById('sideTag');
+  tag.textContent = 'Khách'; tag.style.background = 'rgba(160,174,192,.15)'; tag.style.color = '#718096';
+  document.getElementById('btnCreate').disabled = true;
+  renderTable();
+  toast('Đã đăng xuất', 'inf');
+}
+
+function updateUIForUser(acc) {
+  const r = ROLES_CFG[acc.role];
+  // Sidebar
+  document.getElementById('sideAv').textContent = r.short;
+  document.getElementById('sideAv').style.background = r.bg;
+  document.getElementById('sideAv').style.color = r.color;
+  document.getElementById('sideName').textContent = acc.name;
+  const tag = document.getElementById('sideTag');
+  tag.textContent = r.label; tag.style.background = r.tagBg; tag.style.color = r.tagColor;
+  // Topbar
+  document.getElementById('topAv').textContent = r.short;
+  document.getElementById('topAv').style.background = r.bg;
+  document.getElementById('topAv').style.color = r.color;
+  document.getElementById('topName').textContent = acc.name;
+  document.getElementById('topRole').textContent = r.label;
+  // Show logged-in menu, hide guest menu
+  document.getElementById('menuGuest').style.display = 'none';
+  document.getElementById('menuLoggedIn').style.display = 'block';
+  // Restore topbar click to show user menu
+  document.getElementById('topbarUser').onclick = toggleUserMenu;
+}
+
+function toggleUserMenu() {
+  document.getElementById('userMenu').classList.toggle('show');
+}
+// Close menu on outside click
+document.addEventListener('click', e => {
+  const u = document.getElementById('topbarUser');
+  if (u && !u.contains(e.target)) document.getElementById('userMenu').classList.remove('show');
+});
+
+function openForgot() {
+  alert('Vui lòng liên hệ Admin để đặt lại mật khẩu.');
+}
+
+function openChangePw() { openM('mChangePw'); }
+
+function doChangePw() {
+  if (!S.currentUser) return;
+  const old  = document.getElementById('pwOld').value;
+  const nw   = document.getElementById('pwNew').value;
+  const cfm  = document.getElementById('pwCfm').value;
+  const acc  = S.accounts.find(a => a.id === S.currentUser.id);
+  if (!acc || acc.password !== old) { toast('❌ Mật khẩu hiện tại không đúng!', 'err'); return; }
+  if (nw.length < 6) { toast('❌ Mật khẩu mới tối thiểu 6 ký tự!', 'err'); return; }
+  if (nw !== cfm)    { toast('❌ Mật khẩu xác nhận không khớp!', 'err'); return; }
+  acc.password = nw;
+  saveLocal();
+  syncToSheets();  // đồng bộ mật khẩu mới lên Sheets ngay
+  closeM('mChangePw');
+  ['pwOld','pwNew','pwCfm'].forEach(id => document.getElementById(id).value = '');
+  toast('✅ Đổi mật khẩu thành công!', 'ok');
+}
+
+// ══════════════════════════════════════════
+// ROLE SWITCH (keep for reference only — hidden in UI)
+// ══════════════════════════════════════════
+function switchRole(role) {
+  S.role = role;
+  const r = ROLES_CFG[role];
+  document.getElementById('sideAv').textContent = r.short;
+  document.getElementById('sideAv').style.background = r.bg;
+  document.getElementById('sideAv').style.color = r.color;
+  document.getElementById('sideName').textContent = r.label;
+  const tag = document.getElementById('sideTag');
+  tag.textContent = r.label;
+  tag.style.background = r.tagBg;
+  tag.style.color = r.tagColor;
+  document.getElementById('btnCreate').disabled = !can('create');
+  renderTable();
+  renderAccounts();
+  toast(`Vai trò: ${r.label}`, 'inf');
+}
+
+// ══════════════════════════════════════════
+// PAGE ROUTING
+// ══════════════════════════════════════════
+function gotoPageOrLogin(p) {
+  if (p === 'cauhinh') {
+    if (!S.currentUser) {
+      requireLogin('Trang Cấu hình chỉ dành cho Admin. Vui lòng đăng nhập.', () => {
+        if (S.role !== 'admin') { toast('❌ Chỉ Admin mới được vào trang Cấu hình!', 'err'); return; }
+        gotoPage('cauhinh');
+      });
+      return;
+    }
+    if (S.role !== 'admin') { toast('❌ Chỉ Admin mới được vào trang Cấu hình!', 'err'); return; }
+  }
+  gotoPage(p);
+}
+function gotoPage(p) {
+  ['tongquan','thaydoi','cauhinh'].forEach(x => {
+    document.getElementById('page-'+x).style.display = 'none';
+    document.getElementById('nav-'+x).classList.remove('active');
+  });
+  document.getElementById('page-'+p).style.display = 'block';
+  document.getElementById('nav-'+p).classList.add('active');
+  const names = { tongquan:'Tổng quan', thaydoi:'Thay đổi thông tin', cauhinh:'Cấu hình tài khoản' };
+  document.getElementById('bcCur').textContent = names[p];
+  if (p === 'cauhinh') { renderAccounts(); renderTypeList(); }
+}
+
+function switchTab(t) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.remove('active'));
+  document.querySelectorAll('.tab-cnt').forEach(c => c.classList.remove('active'));
+  document.querySelector(`[onclick="switchTab('${t}')"]`).classList.add('active');
+  document.getElementById('tab-'+t).classList.add('active');
+}
+
+// ══════════════════════════════════════════
+// TABLE RENDER
+// ══════════════════════════════════════════
+let filteredReqs = [];
+
+function filterTable() {
+  const q = (document.getElementById('searchInput').value||'').toLowerCase();
+  const tid = (document.getElementById('fTid').value||'').toLowerCase();
+  const type = document.getElementById('fType').value;
+  const status = document.getElementById('fStatus').value;
+  filteredReqs = S.requests.filter(r => {
+    if (q && !r.tid.toLowerCase().includes(q) && !r.title.toLowerCase().includes(q)) return false;
+    if (tid && !r.tid.toLowerCase().includes(tid)) return false;
+    if (type && r.type !== type) return false;
+    if (status && r.status !== status) return false;
+    return true;
+  });
+  renderTable();
+}
+
+function renderTable() {
+  if (!filteredReqs.length && !document.getElementById('searchInput').value && !document.getElementById('fTid').value) {
+    filteredReqs = [...S.requests];
+  }
+  const tbody = document.getElementById('tBody');
+  tbody.innerHTML = '';
+  document.getElementById('showCnt').textContent = filteredReqs.length;
+
+  if (!filteredReqs.length) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td colspan="10"><div class="empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg><p>Không có yêu cầu nào</p></div></td>`;
+    tbody.appendChild(tr);
+    return;
+  }
+
+  filteredReqs.forEach((r,i) => {
+    const st = STATUSES[r.status];
+    const imgs = S.images[r.id] || [];
+    const tr = document.createElement('tr');
+    tr.style.animationDelay = (i*.04)+'s';
+    tr.innerHTML = `
+      <td><span class="badge ${st.cls}">${st.label}</span></td>
+      <td><span class="tid">${r.tid}</span></td>
+      <td style="font-size:11px;color:var(--TL);max-width:130px;">${r.type}</td>
+      <td style="max-width:160px;font-size:12px;font-weight:600;">${r.title}</td>
+      <td><span class="vo">${r.oldVal||'—'}</span></td>
+      <td><span class="vn">${r.newVal||'—'}</span></td>
+      <td style="font-size:11px;color:var(--TM);">${normalizeDate(r.date)}</td>
+      <td style="font-size:11px;">${r.creator}</td>
+      <td>${buildActions(r)}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  updateStats();
+  updateBadge();
+  renderPagination();
+}
+
+function buildActions(r) {
+  const id = r.id;
+  let btns = `<button class="ba ba-view" onclick="openDetail('${id}')">Chi tiết</button>`;
+  if (r.status === 'wait') {
+    if (can('receive')) {
+      btns += `<button class="ba ba-recv" onclick="askAction('${id}','receive')">Tiếp nhận</button>`;
+      btns += `<button class="ba ba-rej" onclick="openReject('${id}','reject_op','Từ chối yêu cầu')">Từ chối</button>`;
+    } else btns += `<span class="no-p">Không có quyền</span>`;
+  } else if (r.status === 'proc') {
+    if (can('process')) {
+      btns += `<button class="ba ba-proc" onclick="askAction('${id}','process')">Đã xử lý</button>`;
+      btns += `<button class="ba ba-can" onclick="openReject('${id}','cancel','Hủy yêu cầu')">Hủy</button>`;
+    } else btns += `<span class="no-p">Không có quyền</span>`;
+  } else if (r.status === 'risk') {
+    if (can('confirm')) {
+      btns += `<button class="ba ba-conf" onclick="askAction('${id}','confirm')">Xác nhận</button>`;
+      btns += `<button class="ba ba-rej" onclick="openReject('${id}','reject_risk','Team Rủi ro từ chối')">Từ chối</button>`;
+    } else btns += `<span class="no-p">Không có quyền</span>`;
+  }
+  return `<div class="ab">${btns}</div>`;
+}
+
+function updateStats() {
+  const all = S.requests;
+  document.getElementById('stTotal').textContent  = all.length;
+  document.getElementById('stWait').textContent   = all.filter(r=>r.status==='wait').length;
+  document.getElementById('stProc').textContent   = all.filter(r=>r.status==='proc'||r.status==='risk').length;
+  document.getElementById('stDone').textContent   = all.filter(r=>r.status==='done').length;
+  document.getElementById('stCancel').textContent = all.filter(r=>r.status==='cancel').length;
+}
+
+function updateBadge() {
+  const n = S.requests.filter(r=>r.status==='wait'||r.status==='proc').length;
+  const b = document.getElementById('topBadge');
+  b.textContent = n; b.style.display = n>0?'':'none';
+}
+
+function renderPagination() {
+  document.getElementById('pagInfo').textContent = `Hiển thị ${filteredReqs.length} / ${S.requests.length}`;
+}
+
+// ══════════════════════════════════════════
+// ACTIONS (workflow)
+// ══════════════════════════════════════════
+const ACT_META = {
+  receive:     { title:'Tiếp nhận yêu cầu?',      sub:'Chuyển sang trạng thái Đang xử lý.', newStatus:'proc',   iconBg:'#EBF8FF', iconColor:'#3182CE', icon:'M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z' },
+  process:     { title:'Xác nhận đã xử lý?',       sub:'Chuyển đến Team Rủi ro xác nhận.',   newStatus:'risk',   iconBg:'#FAF5FF', iconColor:'#7C3AED', icon:'M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z' },
+  confirm:     { title:'Xác nhận hoàn thành?',      sub:'Yêu cầu sẽ được đánh dấu Hoàn thành.', newStatus:'done', iconBg:'#F0FFF4', iconColor:'#38A169', icon:'M20 6 9 17 4 12' },
+};
+
+function askAction(id, action) {
+  requireLogin('Bạn cần đăng nhập để thực hiện thao tác này.', () => {
+    const r = S.requests.find(x=>x.id===id);
+    const m = ACT_META[action];
+    S.pendingAction = { id, action, newStatus: m.newStatus };
+    document.getElementById('cIcon').innerHTML = `<div class="c-icon" style="background:${m.iconBg};"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${m.iconColor}" stroke-width="2"><path d="${m.icon}"/></svg></div>`;
+    document.getElementById('cTitle2').textContent = m.title;
+    document.getElementById('cSub').textContent = m.sub;
+    document.getElementById('cCode').textContent = `Mã TID: ${r.tid}`;
+    document.getElementById('cOkBtn').className = 'btn-ok';
+    document.getElementById('cOkBtn').textContent = 'Xác nhận';
+    openM('mConfirm');
+  });
+}
+
+function doConfirm() {
+  if (!S.pendingAction) return;
+  const { id, action, newStatus } = S.pendingAction;
+  const r = S.requests.find(x=>x.id===id);
+  r.status = newStatus;
+  r.handler = S.currentUser ? S.currentUser.name : ROLES_CFG[S.role].label;
+  if (!Array.isArray(r.history)) r.history = [];
+  const actionLabels = { receive:'Tiếp nhận', process:'Đã xử lý → Chuyển Rủi ro', confirm:'Xác nhận hoàn thành' };
+  r.history.push({ action: actionLabels[action]||action, user: r.handler, role: ROLES_CFG[S.role].label, time: nowStr(), note:'' });
+  S.pendingAction = null;
+  closeM('mConfirm');
+  filteredReqs = [...S.requests];
+  renderTable();
+  saveLocal(); syncToSheets();
+  const msgs = { receive:'✅ Tiếp nhận thành công — Đang xử lý', process:'🔵 Chuyển đến Team Rủi ro', confirm:'✅ Hoàn thành!' };
+  toast(msgs[action]||'Thành công','ok');
+}
+
+function openReject(id, action, label) {
+  requireLogin('Bạn cần đăng nhập để thực hiện thao tác này.', () => {
+    const r = S.requests.find(x=>x.id===id);
+    S.pendingReject = { id, action };
+    document.getElementById('rejTitle').textContent = label;
+    document.getElementById('rejNote').value = '';
+    document.getElementById('rejCode').textContent = `Mã TID: ${r.tid}`;
+    openM('mReject');
+  });
+}
+
+function doReject() {
+  const note = document.getElementById('rejNote').value.trim();
+  if (!note) { toast('Vui lòng nhập lý do!','err'); return; }
+  if (!S.pendingReject) return;
+  const { id } = S.pendingReject;
+  const r = S.requests.find(x=>x.id===id);
+  r.status = 'cancel';
+  r.rejectNote = note;
+  r.handler = S.currentUser ? S.currentUser.name : ROLES_CFG[S.role].label;
+  if (!Array.isArray(r.history)) r.history = [];
+  r.history.push({ action:'Từ chối / Hủy', user: r.handler, role: ROLES_CFG[S.role].label, time: nowStr(), note });
+  S.pendingReject = null;
+  closeM('mReject');
+  filteredReqs = [...S.requests];
+  renderTable();
+  saveLocal(); syncToSheets();
+  toast('❌ Đã từ chối yêu cầu','err');
+}
+
+// ══════════════════════════════════════════
+// DETAIL VIEW
+// ══════════════════════════════════════════
+function openDetail(id) {
+  const r = S.requests.find(x=>x.id===id);
+  const st = STATUSES[r.status];
+  const imgs = S.images[r.id] || [];
+  document.getElementById('detTitle').textContent = r.title;
+
+  // ── Tab 1: Thông tin cơ bản ──
+  let tab1 = `
+    <div class="det-section">
+      <div class="det-grid">
+        <div class="det-field"><div class="det-lbl">Trạng thái</div><div class="det-val"><span class="badge ${st.cls}">${st.label}</span></div></div>
+        <div class="det-field"><div class="det-lbl">Mã TID</div><div class="det-val"><span class="tid">${r.tid}</span></div></div>
+        <div class="det-field"><div class="det-lbl">Loại yêu cầu</div><div class="det-val">${r.type}</div></div>
+        <div class="det-field"><div class="det-lbl">Ngày tạo</div><div class="det-val">${normalizeDate(r.date)}</div></div>
+        <div class="det-field"><div class="det-lbl">Người tạo</div><div class="det-val">${r.creator}</div></div>
+        <div class="det-field"><div class="det-lbl">Người xử lý</div><div class="det-val ${r.handler==='—'?'muted':''}">${r.handler}</div></div>
+        <div class="det-field"><div class="det-lbl">Giá trị cũ</div><div class="det-val"><span class="vo">${r.oldVal||'—'}</span></div></div>
+        <div class="det-field"><div class="det-lbl">Giá trị mới</div><div class="det-val"><span class="vn">${r.newVal||'—'}</span></div></div>
+      </div>
+    </div>
+    <div class="det-section">
+      <div class="det-sec-title">Nội dung yêu cầu</div>
+      <div class="det-field" style="margin-bottom:10px;"><div class="det-lbl">Tiêu đề</div><div class="det-val">${r.title}</div></div>
+      <div class="det-field"><div class="det-lbl">Mô tả</div>
+        ${r.desc ? `<div class="det-desc">${r.desc}</div>` : `<div class="det-val muted">Không có mô tả</div>`}
+      </div>
+    </div>`;
+
+  if (imgs.length) {
+    tab1 += `<div class="det-section"><div class="det-sec-title">Hình ảnh đính kèm (${imgs.length})</div><div class="det-imgs">`;
+    imgs.forEach((src, i) => {
+      const dispSrc = src.includes('drive.google.com/uc')
+        ? src.replace(/drive\.google\.com\/uc\?export=view&id=/, 'drive.google.com/thumbnail?id=') + '&sz=w1200'
+        : src;
+      tab1 += `<div class="det-img" onclick="openLightbox('${dispSrc}')">
+        <img src="${dispSrc}" alt="ảnh ${i+1}" referrerpolicy="no-referrer"
+          onerror="this.parentNode.innerHTML='<div style=\\'display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:4px;font-size:10px;color:var(--TM);\\'>📷<span>Không tải được</span></div>'">
+      </div>`;
+    });
+    tab1 += `</div></div>`;
+  }
+
+  if (r.status === 'cancel' && r.rejectNote) {
+    tab1 += `<div class="det-section"><div class="det-sec-title">Lý do từ chối / hủy</div>
+      <div class="reject-note-box"><strong>Ghi chú:</strong> ${r.rejectNote}</div></div>`;
+  }
+
+  // ── Tab 2: Lịch sử thao tác ──
+  const ACTION_META_HIST = {
+    'Tạo yêu cầu':               { ico:'📝', bg:'#FFF8E1', color:'#B7791F' },
+    'Tiếp nhận':                  { ico:'✅', bg:'#EBF8FF', color:'#2B6CB0' },
+    'Đã xử lý → Chuyển Rủi ro':  { ico:'🔵', bg:'#FAF5FF', color:'#6B21A8' },
+    'Xác nhận hoàn thành':        { ico:'🎉', bg:'#F0FFF4', color:'#276749' },
+    'Từ chối / Hủy':              { ico:'❌', bg:'#FFF5F5', color:'#9B2C2C' },
+  };
+  const hist = Array.isArray(r.history) ? r.history : [];
+  let tab2 = hist.length ? `<div class="tl-wrap">` : `<div style="text-align:center;padding:30px;color:var(--TM);font-size:13px;">Chưa có lịch sử thao tác</div>`;
+  hist.forEach((h, i) => {
+    const m = ACTION_META_HIST[h.action] || { ico:'⚡', bg:'#F4F6FB', color:'var(--TM)' };
+    tab2 += `
+      <div class="tl-row">
+        <div class="tl-ico" style="background:${m.bg};">${m.ico}</div>
+        <div class="tl-body">
+          <div class="tl-action">${h.action}</div>
+          <div class="tl-meta">👤 <strong>${h.user}</strong> · ${h.role} · 🕐 ${h.time}</div>
+          ${h.note ? `<div class="tl-note">📌 ${h.note}</div>` : ''}
+        </div>
+      </div>`;
+  });
+  if (hist.length) tab2 += `</div>`;
+
+  // ── Assemble with tabs ──
+  const html = `
+    <div class="det-tabs">
+      <button class="det-tab active" onclick="switchDetTab('info',this)">📋 Thông tin cơ bản</button>
+      <button class="det-tab" onclick="switchDetTab('hist',this)">📜 Lịch sử thao tác <span style="background:var(--Y);color:#181C28;font-size:9px;font-weight:800;padding:1px 6px;border-radius:100px;margin-left:4px;">${hist.length}</span></button>
+    </div>
+    <div class="det-tab-cnt active" id="detTab-info" style="height:340px;overflow-y:auto;padding-right:4px;">${tab1}</div>
+    <div class="det-tab-cnt" id="detTab-hist" style="height:340px;overflow-y:auto;padding-right:4px;">${tab2}</div>`;
+
+  document.getElementById('detBody').innerHTML = html;
+  openM('mDetail');
+}
+
+function switchDetTab(name, btn) {
+  document.querySelectorAll('.det-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.det-tab-cnt').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('detTab-' + name).classList.add('active');
+}
+
+function openLightbox(src) {
+  const img = document.getElementById('lightboxImg');
+  img.src = src;
+  img.referrerPolicy = 'no-referrer';
+  document.getElementById('lightbox').classList.add('show');
+}
+
+// ══════════════════════════════════════════
+// CREATE REQUEST
+// ══════════════════════════════════════════
+function openCreate() {
+  requireLogin('Bạn cần đăng nhập để tạo yêu cầu.', () => {
+    if (!can('create')) { toast('Bạn không có quyền tạo yêu cầu!','err'); return; }
+    S.editImages = [];
+    S._driveWarned = false;
+    document.getElementById('imgPreviews').innerHTML = '';
+    ['cTid','cOld','cNew','cTitle','cDesc'].forEach(id => document.getElementById(id).value='');
+    const banner = document.getElementById('driveWarnBanner');
+    const hasValidUrl = S.config.scriptUrl && S.config.scriptUrl.includes('script.google.com');
+    if (banner) banner.style.display = hasValidUrl ? 'none' : 'flex';
+    openM('mCreate');
+  });
+}
+
+function submitCreate() {
+  if (!can('create')) { toast('Không có quyền!','err'); return; }
+  const tid   = document.getElementById('cTid').value.trim();
+  const type  = document.getElementById('cType').value;
+  const title = document.getElementById('cTitle').value.trim();
+  const desc  = document.getElementById('cDesc').value.trim();
+  const oldV  = document.getElementById('cOld').value.trim();
+  const newV  = document.getElementById('cNew').value.trim();
+  if (!tid || !type || !title) { toast('Vui lòng điền: Mã TID, Loại yêu cầu, Tiêu đề','err'); return; }
+
+  // Kiểm tra nếu ảnh vẫn đang upload
+  const stillUploading = S.editImages.some(x => x.uploading);
+  if (stillUploading) { toast('⏳ Ảnh đang được upload, vui lòng chờ...','inf'); return; }
+
+  const creatorName = S.currentUser ? S.currentUser.name : ROLES_CFG[S.role].label;
+  const id = 'r' + Date.now();
+  const req = {
+    id, tid, type, title, desc,
+    oldVal: oldV||'—', newVal: newV||'—',
+    date: new Date().toISOString().slice(0,10),
+    creator: creatorName,
+    handler: '—', status: 'wait', rejectNote: '',
+    history: [{ action:'Tạo yêu cầu', user: creatorName, role: ROLES_CFG[S.role].label, time: nowStr(), note:'' }]
+  };
+  S.requests.unshift(req);
+
+  // Lưu URLs ảnh: ưu tiên driveUrl, fallback về dataUrl (local)
+  if (S.editImages.length) {
+    S.images[id] = S.editImages.map(x => x.driveUrl || x.dataUrl);
+  }
+  S.editImages = [];
+
+  closeM('mCreate');
+  filteredReqs = [...S.requests];
+  renderTable();
+  saveLocal(); syncToSheets();
+  toast(`✅ Đã tạo yêu cầu ${tid}`,'ok');
+}
+
+// ══════════════════════════════════════════
+// IMAGE: COMPRESS → UPLOAD TO DRIVE
+// ══════════════════════════════════════════
+
+// Nén ảnh bằng Canvas (max 1200px, quality 0.72)
+function compressImage(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 1200;
+        let { width, height } = img;
+        if (width > MAX || height > MAX) {
+          if (width > height) { height = Math.round(height * MAX / width); width = MAX; }
+          else                { width  = Math.round(width  * MAX / height); height = MAX; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        const compressed = canvas.toDataURL('image/jpeg', 0.72);
+        const sizeBefore = Math.round(ev.target.result.length * 0.75 / 1024);
+        const sizeAfter  = Math.round(compressed.length      * 0.75 / 1024);
+        resolve({ dataUrl: compressed, sizeBefore, sizeAfter, mimeType: 'image/jpeg' });
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Upload base64 lên Google Drive qua Apps Script
+async function uploadToDrive(dataUrl, mimeType, filename) {
+  const url = S.config.scriptUrl;
+  if (!url) return null;
+
+  // Validate URL phải là Apps Script
+  if (!url.includes('script.google.com')) {
+    toast('❌ URL không hợp lệ — phải là URL Apps Script', 'err');
+    return null;
+  }
+
+  const base64 = dataUrl.split(',')[1];
+  if (!base64) return null;
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'uploadImage', token: S.config.secretToken || '', base64, mimeType: mimeType || 'image/jpeg', filename: filename || ('img_' + Date.now() + '.jpg') }),
+      redirect: 'follow',
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    const data = JSON.parse(text);
+    if (data.error) throw new Error(data.error);
+    if (data.url) return data.url;
+    throw new Error('Không nhận được URL từ Drive');
+  } catch(e) {
+    console.error('[Drive upload error]', e.message);
+    // Phân loại lỗi để hiện thông báo phù hợp
+    if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
+      toast('❌ Lỗi mạng — kiểm tra kết nối internet', 'err');
+    } else if (e.message.includes('HTTP 4') || e.message.includes('HTTP 5')) {
+      toast('❌ Apps Script lỗi ' + e.message + ' — kiểm tra Deploy', 'err');
+    } else if (e.message.includes('CORS') || e.message.includes('cors')) {
+      toast('❌ Lỗi CORS — đảm bảo Apps Script "Who has access: Anyone"', 'err');
+    } else {
+      toast('❌ Upload Drive thất bại: ' + e.message, 'err');
+    }
+    return null;
+  }
+}
+
+// Xử lý file chọn từ input
+function handleFiles(files) {
+  Array.from(files).forEach(f => {
+    if (!f.type.startsWith('image/')) return;
+    processImageFile(f);
+  });
+}
+
+// Xử lý 1 file: nén → preview → upload lên Drive
+async function processImageFile(file) {
+  const name = file.name || ('img_' + Date.now() + '.jpg');
+  // Hiện placeholder loading
+  const uid = 'img_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+  const previews = document.getElementById('imgPreviews');
+  const div = document.createElement('div');
+  div.className = 'img-thumb'; div.id = uid;
+  div.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#F4F6FB;font-size:18px;">⏳</div>`;
+  previews.appendChild(div);
+
+  // Nén ảnh
+  const { dataUrl, sizeBefore, sizeAfter, mimeType } = await compressImage(file);
+  toast(`🗜️ Nén: ${sizeBefore}KB → ${sizeAfter}KB`, 'inf');
+
+  // Hiện preview ngay (dùng data URL tạm)
+  div.innerHTML = `<img src="${dataUrl}" alt=""><div class="img-upload-status">⬆️</div><button class="img-del" onclick="removeImgById('${uid}')">✕</button>`;
+  // Lưu tạm base64 vào S.editImages (chờ upload)
+  S.editImages.push({ uid, dataUrl, driveUrl: null, uploading: true });
+
+  // Upload lên Drive nếu có URL Apps Script hợp lệ
+  const hasValidUrl = S.config.scriptUrl && S.config.scriptUrl.includes('script.google.com');
+  if (hasValidUrl) {
+    const driveUrl = await uploadToDrive(dataUrl, mimeType, name);
+    const entry = S.editImages.find(x => x.uid === uid);
+    if (entry) { entry.driveUrl = driveUrl; entry.uploading = false; }
+    const statusEl = div.querySelector('.img-upload-status');
+    if (statusEl) statusEl.textContent = driveUrl ? '✅' : '⚠️';
+    if (driveUrl) {
+      toast('☁️ Đã upload ảnh lên Google Drive', 'ok');
+    }
+    // (lỗi cụ thể đã được toast bên trong uploadToDrive rồi)
+  } else {
+    const entry = S.editImages.find(x => x.uid === uid);
+    if (entry) entry.uploading = false;
+    const statusEl = div.querySelector('.img-upload-status');
+    if (statusEl) statusEl.textContent = '💾';
+    toast('💾 Ảnh lưu local tạm thời — chưa kết nối Drive', 'inf');
+    if (!S._driveWarned) {
+      S._driveWarned = true;
+      setTimeout(() => {
+        const go = confirm('⚠️ Chưa kết nối Google Drive!\n\nẢnh đang lưu TẠM THỜI — sẽ mất khi xóa cache.\n\nBấm OK để đến cài đặt kết nối ngay?');
+        if (go) { closeM('mCreate'); gotoPage('cauhinh'); setTimeout(() => switchTab('connect'), 150); }
+      }, 400);
+    }
+  }
+}
+
+function removeImgById(uid) {
+  S.editImages = S.editImages.filter(x => x.uid !== uid);
+  const el = document.getElementById(uid);
+  if (el) el.remove();
+}
+
+// Paste ảnh vào modal tạo yêu cầu
+document.addEventListener('paste', function(e) {
+  if (!document.getElementById('mCreate').classList.contains('show')) return;
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (let item of items) {
+    if (item.type.startsWith('image/')) {
+      processImageFile(item.getAsFile());
+    }
+  }
+});
+
+// ══════════════════════════════════════════
+// ACCOUNTS
+// ══════════════════════════════════════════
+const ROLE_PERMS = {
+  admin:  { label:'Admin', cls:'pt-ad', perms:['Tất cả quyền'] },
+  op:     { label:'Team OP', cls:'pt-op', perms:['Tạo yêu cầu','Tiếp nhận','Đã xử lý','Hủy'] },
+  risk:   { label:'Team Rủi ro', cls:'pt-rk', perms:['Xác nhận Rủi ro','Từ chối Rủi ro'] },
+  viewer: { label:'Viewer', cls:'pt-vw', perms:['Chỉ xem'] },
+};
+
+function renderAccounts() {
+  const grid = document.getElementById('accGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  S.accounts.forEach((acc,i) => {
+    const rc = ROLE_PERMS[acc.role] || ROLE_PERMS.viewer;
+    const initials = acc.name.split(' ').slice(-2).map(w=>w[0]).join('').toUpperCase();
+    const avBg = AV_COLORS[i % AV_COLORS.length];
+    const canEdit = can('manageAcc');
+    const card = document.createElement('div');
+    card.className = 'acc-card';
+    card.innerHTML = `
+      <div class="acc-head">
+        <div class="acc-av" style="background:${avBg};color:#fff;">${initials}</div>
+        <div style="overflow:hidden;">
+          <div class="acc-nm">${acc.name}</div>
+          <div class="acc-em">${acc.email}</div>
+          <div style="margin-top:4px;"><span class="pt ${rc.cls}">${rc.label}</span></div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--TM);">📁 ${acc.dept}</div>
+      <div class="acc-perms">${rc.perms.map(p=>`<span class="pt ${rc.cls}">${p}</span>`).join('')}</div>
+      <div class="acc-foot">
+        <button class="btn-ae" ${!canEdit?'disabled':''} onclick="editAcc('${acc.id}')">✏️ Chỉnh sửa</button>
+        <button class="btn-ad" ${!canEdit?'disabled':''} onclick="deleteAcc('${acc.id}')">🗑️</button>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function openAccModal(id) {
+  if (!can('manageAcc')) { toast('Không có quyền quản lý tài khoản!','err'); return; }
+  ['aN','aE','aP','aD'].forEach(x=>document.getElementById(x).value='');
+  document.getElementById('aR').value='';
+  document.getElementById('accEditId').value = id || '';
+  document.getElementById('accMTitle').textContent = id ? 'Chỉnh sửa tài khoản' : 'Tạo tài khoản mới';
+  if (id) {
+    const acc = S.accounts.find(a=>a.id===id);
+    if (acc) { document.getElementById('aN').value=acc.name; document.getElementById('aE').value=acc.email; document.getElementById('aD').value=acc.dept; document.getElementById('aR').value=acc.role; }
+  }
+  openM('mAcc');
+}
+
+function editAcc(id) { openAccModal(id); }
+
+function deleteAcc(id) {
+  if (!can('manageAcc')) { toast('Không có quyền!','err'); return; }
+  S.accounts = S.accounts.filter(a=>a.id!==id);
+  renderAccounts();
+  saveLocal(); syncToSheets();
+  toast('Đã xóa tài khoản','err');
+}
+
+function submitAcc() {
+  if (!can('manageAcc')) { toast('Không có quyền!','err'); return; }
+  const name  = document.getElementById('aN').value.trim();
+  const email = document.getElementById('aE').value.trim();
+  const uname = document.getElementById('aU').value.trim();
+  const pass  = document.getElementById('aP').value;
+  const dept  = document.getElementById('aD').value.trim();
+  const role  = document.getElementById('aR').value;
+  const editId = document.getElementById('accEditId').value;
+  if (!name || !email || !role) { toast('Điền đủ thông tin bắt buộc!','err'); return; }
+  if (editId) {
+    const acc = S.accounts.find(a=>a.id===editId);
+    if (acc) {
+      acc.name=name; acc.email=email; acc.username=uname||email.split('@')[0];
+      acc.dept=dept||'Chưa phân bổ'; acc.role=role;
+      if (pass && pass.length >= 6) acc.password = pass;
+      else if (pass && pass.length > 0) { toast('Mật khẩu tối thiểu 6 ký tự!','err'); return; }
+    }
+  } else {
+    if (!pass || pass.length < 6) { toast('Mật khẩu tối thiểu 6 ký tự!','err'); return; }
+    S.accounts.push({ id:'a'+Date.now(), name, email, username:uname||email.split('@')[0], password:pass, dept:dept||'Chưa phân bổ', role });
+  }
+  closeM('mAcc');
+  renderAccounts();
+  saveLocal(); syncToSheets();
+  toast(`✅ Đã lưu tài khoản ${name}`,'ok');
+}
+
+// ══════════════════════════════════════════
+// TYPE CONFIG
+// ══════════════════════════════════════════
+function renderTypeList() {
+  const list = document.getElementById('typeList');
+  list.innerHTML = '';
+  S.config.requestTypes.forEach((t, i) => {
+    const div = document.createElement('div');
+    div.className = 'type-item';
+    const canEdit = can('manageTypes');
+    div.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:11px;color:var(--TM);font-weight:700;width:20px;">${i+1}.</span>
+        <span class="type-item-name">${t}</span>
+      </div>
+      <button class="btn-type-del" ${!canEdit?'disabled style="opacity:.35;cursor:not-allowed;"':''} onclick="removeType(${i})">🗑️ Xóa</button>`;
+    list.appendChild(div);
+  });
+  // update filter dropdown
+  const sel = document.getElementById('fType');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Tất cả</option>';
+  S.config.requestTypes.forEach(t => {
+    const o = document.createElement('option');
+    o.value = t; o.textContent = t;
+    if (t === cur) o.selected = true;
+    sel.appendChild(o);
+  });
+  // update create form dropdown
+  const cSel = document.getElementById('cType');
+  cSel.innerHTML = '<option value="">-- Chọn loại --</option>';
+  S.config.requestTypes.forEach(t => {
+    const o = document.createElement('option');
+    o.value = t; o.textContent = t;
+    cSel.appendChild(o);
+  });
+}
+
+function addType() {
+  if (!can('manageTypes')) { toast('Không có quyền cấu hình!','err'); return; }
+  const val = document.getElementById('newTypeInput').value.trim();
+  if (!val) return;
+  if (S.config.requestTypes.includes(val)) { toast('Loại này đã tồn tại!','err'); return; }
+  S.config.requestTypes.push(val);
+  document.getElementById('newTypeInput').value = '';
+  renderTypeList();
+  saveLocal(); syncToSheets();
+  toast(`✅ Đã thêm loại: ${val}`,'ok');
+}
+
+function removeType(i) {
+  if (!can('manageTypes')) { toast('Không có quyền!','err'); return; }
+  const name = S.config.requestTypes[i];
+  S.config.requestTypes.splice(i, 1);
+  renderTypeList();
+  saveLocal(); syncToSheets();
+  toast(`Đã xóa loại: ${name}`,'inf');
+}
+
+// ══════════════════════════════════════════
+// MODAL HELPERS
+// ══════════════════════════════════════════
+function openM(id) { document.getElementById(id).classList.add('show'); }
+function closeM(id) { document.getElementById(id).classList.remove('show'); }
+function closeIfOv(e, id) { if (e.target.id === id) closeM(id); }
+
+// ══════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════
+function toast(msg, type='ok') {
+  const w = document.getElementById('toastW');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<div class="t-dot"></div><span>${msg}</span>`;
+  w.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .4s'; setTimeout(()=>t.remove(),400); }, 3000);
+}
+
+// ══════════════════════════════════════════
+// EXPORT CSV
+// ══════════════════════════════════════════
+function exportCSV() {
+  const headers = ['Trạng thái','Mã TID','Loại yêu cầu','Tiêu đề','Giá trị cũ','Giá trị mới','Ngày tạo','Người tạo','Người xử lý','Lý do từ chối'];
+  const rows = filteredReqs.map(r => [STATUSES[r.status].label, r.tid, r.type, r.title, r.oldVal, r.newVal, r.date, r.creator, r.handler, r.rejectNote||'']);
+  const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
+  a.download = `yeu-cau-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  toast('✅ Đã xuất file CSV','ok');
+}
+
+// ══════════════════════════════════════════
+// COPY APPS SCRIPT
+// ══════════════════════════════════════════
+function copyScript() {
+  navigator.clipboard.writeText(APPS_SCRIPT).then(() => toast('✅ Đã copy code Apps Script','ok'));
+}
+
+// ══════════════════════════════════════════
+// RENDER ALL
+// ══════════════════════════════════════════
+function renderAll() {
+  filteredReqs = [...S.requests];
+  renderTable();
+  renderAccounts();
+  renderTypeList();
+}
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+(function init() {
+  loadLocal();
+  const validUrl = S.config.scriptUrl && S.config.scriptUrl.includes('script.google.com');
+  if (validUrl) {
+    document.getElementById('scriptUrl').value = S.config.scriptUrl;
+    if (S.config.secretToken) document.getElementById('secretToken').value = S.config.secretToken;
+    setSyncStatus('synced','URL đã cấu hình');
+    updateConnStatus(true);
+  }
+  document.getElementById('scriptPre').textContent = APPS_SCRIPT;
+
+  // Render app ngay (không chặn bằng login)
+  renderAll();
+  document.getElementById('btnCreate').disabled = true; // disabled cho đến khi login
+
+  // Khôi phục session nếu có
+  try {
+    const sess = sessionStorage.getItem('df_session');
+    if (sess) {
+      const { id } = JSON.parse(sess);
+      const acc = S.accounts.find(a => a.id === id);
+      if (acc) {
+        S.currentUser = acc; S.role = acc.role;
+        updateUIForUser(acc);
+        document.getElementById('btnCreate').disabled = !can('create');
+        renderTable();
+      }
+    }
+  } catch(e) {}
+
+  // Guest state nếu chưa đăng nhập
+  if (!S.currentUser) {
+    document.getElementById('menuGuest').style.display = 'block';
+    document.getElementById('menuLoggedIn').style.display = 'none';
+    document.getElementById('topbarUser').onclick = toggleUserMenu;
+  }
+
+  if (validUrl) setTimeout(loadFromSheets, 500);
+})();
+</script>
+</body>
+</html>
