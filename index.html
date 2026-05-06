@@ -1191,11 +1191,21 @@ async function syncToSheets() {
 function forceSyncToSheets() { syncToSheets(); toast('⬆️ Đang đẩy dữ liệu lên Sheets...','inf'); }
 
 function clearLocalData() {
-  if (!confirm('⚠️ Xóa toàn bộ dữ liệu trong trình duyệt?\n\nDữ liệu trên Google Sheets vẫn được giữ nguyên.\nSau khi xóa, trang sẽ tải lại và đồng bộ từ Sheets.')) return;
-  ['df_requests','df_accounts','df_config','df_images','df_version'].forEach(k => localStorage.removeItem(k));
+  if (!confirm('⚠️ Xóa dữ liệu yêu cầu và tài khoản trong trình duyệt?\n\n✅ Giữ lại: URL Sheets, Secret Token, Google Client ID, Loại yêu cầu\n🗑️ Xóa: Danh sách yêu cầu, Tài khoản, Ảnh cache\n\nDữ liệu trên Google Sheets vẫn được giữ nguyên.')) return;
+  // Chỉ xóa data, GIỮ LẠI config
+  localStorage.removeItem('df_requests');
+  localStorage.removeItem('df_images');
+  // Giữ df_accounts, df_config, df_version
   sessionStorage.removeItem('df_session');
-  toast('🗑️ Đã xóa cache — đang tải lại...','inf');
-  setTimeout(() => location.reload(), 800);
+  // Reset trong memory
+  S.requests = [];
+  S.images   = {};
+  filteredReqs = [];
+  renderTable();
+  updateStats();
+  toast('🗑️ Đã xóa dữ liệu yêu cầu (config vẫn giữ nguyên)', 'inf');
+  // Tự động tải lại từ Sheets nếu đã kết nối
+  if (S.config.scriptUrl) setTimeout(loadFromSheets, 500);
 }
 
 async function testConnection() {
@@ -1724,9 +1734,14 @@ function filterTable() {
 }
 
 function renderTable() {
-  // Khởi tạo lần đầu nếu chưa có filter
-  if (!filteredReqs.length && filteredReqs === S.requests) {
-    filteredReqs = [...S.requests];
+  // Khởi tạo filteredReqs nếu chưa set (lần đầu load)
+  if (filteredReqs.length === 0 && S.requests.length > 0) {
+    const hasAnyFilter = (document.getElementById('searchInput')?.value||'') ||
+      (document.getElementById('fTid')?.value||'') ||
+      (document.getElementById('fType')?.value||'') ||
+      (document.getElementById('fStatus')?.value||'') ||
+      (document.getElementById('fD1')?.value||'');
+    if (!hasAnyFilter) filteredReqs = [...S.requests];
   }
   const tbody = document.getElementById('tBody');
   tbody.innerHTML = '';
