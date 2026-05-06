@@ -2298,6 +2298,9 @@ function renderAll() {
     document.getElementById('setupScreen').classList.remove('hide');
     return;
   }
+
+  // Khôi phục session nếu có
+  try {
     const sess = sessionStorage.getItem('df_session');
     if (sess) {
       const { id } = JSON.parse(sess);
