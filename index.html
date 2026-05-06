@@ -676,8 +676,9 @@ tbody td{padding:12px 14px;font-size:12px;color:var(--TX);vertical-align:middle;
           <div style="display:flex;gap:8px;margin-bottom:20px;">
             <button class="btn btn-p" onclick="saveScriptUrl()">💾 Lưu & Kết nối</button>
             <button class="btn btn-g" onclick="testConnection()">🔍 Kiểm tra kết nối</button>
-            <button class="btn btn-g" onclick="forceSyncToSheets()">⬆️ Đẩy dữ liệu lên Sheets</button>
+            <button class="btn btn-g" onclick="forceSyncToSheets()">⬆️ Đẩy lên Sheets</button>
             <button class="btn btn-g" onclick="loadFromSheets()">⬇️ Tải từ Sheets</button>
+            <button class="btn btn-g" onclick="clearLocalData()" style="border-color:#FEB2B2;color:#9B2C2C;background:#FFF5F5;">🗑️ Xóa cache local</button>
           </div>
 
           <div style="border-top:1px solid var(--BO);padding-top:18px;margin-top:4px;">
@@ -1145,9 +1146,10 @@ async function loadFromSheets() {
     const data = await res.json();
     if (data.error === 'UNAUTHORIZED') throw new Error('Token không hợp lệ — kiểm tra lại Secret Token');
     if (data.error) throw new Error(data.error);
-    if (data.requests?.length) S.requests = data.requests;
-    if (data.accounts?.length) S.accounts = data.accounts;
-    if (data.config?.length) {
+    // Luôn ghi đè local bằng dữ liệu từ Sheets (kể cả khi Sheets trống)
+    if (Array.isArray(data.requests)) S.requests = data.requests;
+    if (Array.isArray(data.accounts) && data.accounts.length) S.accounts = data.accounts;
+    if (Array.isArray(data.config)) {
       data.config.forEach(row => {
         if (row.key === 'requestTypes') try { S.config.requestTypes = JSON.parse(row.value); } catch(e){}
       });
@@ -1187,6 +1189,14 @@ async function syncToSheets() {
 }
 
 function forceSyncToSheets() { syncToSheets(); toast('⬆️ Đang đẩy dữ liệu lên Sheets...','inf'); }
+
+function clearLocalData() {
+  if (!confirm('⚠️ Xóa toàn bộ dữ liệu trong trình duyệt?\n\nDữ liệu trên Google Sheets vẫn được giữ nguyên.\nSau khi xóa, trang sẽ tải lại và đồng bộ từ Sheets.')) return;
+  ['df_requests','df_accounts','df_config','df_images','df_version'].forEach(k => localStorage.removeItem(k));
+  sessionStorage.removeItem('df_session');
+  toast('🗑️ Đã xóa cache — đang tải lại...','inf');
+  setTimeout(() => location.reload(), 800);
+}
 
 async function testConnection() {
   const url   = document.getElementById('scriptUrl').value.trim();
