@@ -825,7 +825,7 @@ tbody td{padding:12px 14px;font-size:12px;color:var(--TX);vertical-align:middle;
     <input type="hidden" id="accEditId">
     <div class="fg">
       <div class="fgrp"><label>Họ và tên *</label><input id="aN" type="text" placeholder="Nguyễn Văn A"></div>
-      <div class="fgrp"><label>Email (Gmail) *</label><input id="aE" type="email" placeholder="user@gmail.com"></div>
+      <div class="fgrp"><label>Email (Gmail) <span class="opt">(không bắt buộc, dùng để đăng nhập Google)</span></label><input id="aE" type="email" placeholder="user@gmail.com (có thể bỏ trống)"></div>
       <div class="fgrp"><label>Tên đăng nhập</label><input id="aU" type="text" placeholder="nguyen.van.a (để trống = dùng email)"></div>
       <div class="fgrp"><label>Mật khẩu *</label><input id="aP" type="password" placeholder="Tối thiểu 6 ký tự"></div>
       <div class="fgrp"><label>Bộ phận</label><input id="aD" type="text" placeholder="Vận hành, Rủi ro..."></div>
@@ -1676,6 +1676,14 @@ document.addEventListener('click', e=>{
 function syncDateRange(){}
 function clearDates(e){ clearDRP(e); }
 
+function resetFilters() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('fTid').value = '';
+  document.getElementById('fType').value = '';
+  document.getElementById('fStatus').value = '';
+  clearDRP({ stopPropagation: () => {} });
+}
+
 function filterTable() {
   const q      = (document.getElementById('searchInput').value||'').toLowerCase();
   const tid    = (document.getElementById('fTid').value||'').toLowerCase();
@@ -1683,8 +1691,17 @@ function filterTable() {
   const status = document.getElementById('fStatus').value;
   const d1     = document.getElementById('fD1').value;
   const d2     = document.getElementById('fD2').value;
+
+  // Nếu không có filter nào → hiện tất cả
+  const hasFilter = q || tid || type || status || d1 || d2;
+  if (!hasFilter) {
+    filteredReqs = [...S.requests];
+    renderTable();
+    return;
+  }
+
   filteredReqs = S.requests.filter(r => {
-    if (q && !r.tid.toLowerCase().includes(q) && !r.title.toLowerCase().includes(q)) return false;
+    if (q && !r.tid.toLowerCase().includes(q) && !(r.title||'').toLowerCase().includes(q)) return false;
     if (tid && !r.tid.toLowerCase().includes(tid)) return false;
     if (type && r.type !== type) return false;
     if (status && r.status !== status) return false;
@@ -1697,7 +1714,8 @@ function filterTable() {
 }
 
 function renderTable() {
-  if (!filteredReqs.length && !document.getElementById('searchInput').value && !document.getElementById('fTid').value) {
+  // Khởi tạo lần đầu nếu chưa có filter
+  if (!filteredReqs.length && filteredReqs === S.requests) {
     filteredReqs = [...S.requests];
   }
   const tbody = document.getElementById('tBody');
@@ -1706,7 +1724,11 @@ function renderTable() {
 
   if (!filteredReqs.length) {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td colspan="10"><div class="empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg><p>Không có yêu cầu nào</p></div></td>`;
+    tr.innerHTML = `<td colspan="9"><div class="empty">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <p>Không tìm thấy kết quả phù hợp</p>
+      <button onclick="resetFilters()" style="margin-top:10px;padding:7px 18px;border:1.5px solid var(--BO);border-radius:8px;background:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;color:var(--TM);">Xóa bộ lọc</button>
+    </div></td>`;
     tbody.appendChild(tr);
     return;
   }
@@ -2224,11 +2246,11 @@ function submitAcc() {
   const dept  = document.getElementById('aD').value.trim();
   const role  = document.getElementById('aR').value;
   const editId = document.getElementById('accEditId').value;
-  if (!name || !email || !role) { toast('Điền đủ thông tin bắt buộc!','err'); return; }
+  if (!name || !role) { toast('Điền đủ thông tin bắt buộc!','err'); return; }
   if (editId) {
     const acc = S.accounts.find(a=>a.id===editId);
     if (acc) {
-      acc.name=name; acc.email=email; acc.username=uname||email.split('@')[0];
+      acc.name=name; acc.email=email||''; acc.username=uname||(email?email.split('@')[0]:name.toLowerCase().replace(/\s/g,'_'));
       acc.dept=dept||'Chưa phân bổ'; acc.role=role;
       if (pass && pass.length >= 6) acc.password = pass;
       else if (pass && pass.length > 0) { toast('Mật khẩu tối thiểu 6 ký tự!','err'); return; }
@@ -2240,7 +2262,8 @@ function submitAcc() {
     }
   } else {
     if (!pass || pass.length < 6) { toast('Mật khẩu tối thiểu 6 ký tự!','err'); return; }
-    S.accounts.push({ id:'a'+Date.now(), name, email, username:uname||email.split('@')[0], password:pass, dept:dept||'Chưa phân bổ', role });
+    const username = uname || (email ? email.split('@')[0] : name.toLowerCase().replace(/\s+/g,'_'));
+    S.accounts.push({ id:'a'+Date.now(), name, email:email||'', username, password:pass, dept:dept||'Chưa phân bổ', role });
   }
   closeM('mAcc');
   renderAccounts();
