@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Quản Lý Thay Đổi Thông Tin</title>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 :root{--Y:#F5C518;--YD:#D4A800;--YL:#FFFADC;--SB:#15171E;--ST:#8B91A8;--SH:#1E212B;--BG:#EFF2F7;--CA:#FFFFFF;--BO:#E2E8F4;--TX:#181C28;--TM:#7A82A0;--TL:#4A5068;--DG:#E53E3E;--SC:#38A169;--WN:#D69E2E;--IN:#3182CE;--PU:#7C3AED;--R:10px;--SH2:0 1px 8px rgba(0,0,0,.06);}
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -400,7 +401,7 @@ tbody td{padding:12px 14px;font-size:12px;color:var(--TX);vertical-align:middle;
       <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
       Đăng nhập bằng Google
     </button>
-    <!-- Gmail input - hiện khi bấm nút Google -->
+    <!-- Gmail input - hiện khi bấm nút Google (fallback nếu không có Client ID) -->
     <div id="gmailInputWrap" style="display:none;margin-top:10px;">
       <div class="fgrp-login">
         <label>Nhập địa chỉ Gmail</label>
@@ -410,6 +411,8 @@ tbody td{padding:12px 14px;font-size:12px;color:var(--TX);vertical-align:middle;
         Xác nhận Gmail
       </button>
     </div>
+    <!-- Google OAuth button mount (khi có Client ID) -->
+    <div id="googleBtnMount" style="margin-top:10px;display:flex;justify-content:center;"></div>
 
     <div class="login-divider">hoặc đăng nhập bằng tài khoản</div>
 
@@ -676,6 +679,25 @@ tbody td{padding:12px 14px;font-size:12px;color:var(--TX);vertical-align:middle;
             <button class="btn btn-g" onclick="forceSyncToSheets()">⬆️ Đẩy dữ liệu lên Sheets</button>
             <button class="btn btn-g" onclick="loadFromSheets()">⬇️ Tải từ Sheets</button>
           </div>
+
+          <div style="border-top:1px solid var(--BO);padding-top:18px;margin-top:4px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:4px;">🔑 Google OAuth (Đăng nhập bằng Google)</div>
+            <div style="font-size:12px;color:var(--TM);margin-bottom:12px;">Cho phép người dùng đăng nhập bằng tài khoản Google thực sự thay vì nhập email thủ công.</div>
+            <div class="fgrp">
+              <label>Google Client ID <span style="font-weight:400;color:var(--TM);font-style:italic;">(từ Google Cloud Console)</span></label>
+              <div style="display:flex;gap:8px;">
+                <input type="text" id="googleClientId" placeholder="XXXXXXXX.apps.googleusercontent.com" style="flex:1;padding:9px 12px;border:1.5px solid var(--BO);border-radius:8px;font-family:'Courier New',monospace;font-size:11px;color:var(--TX);background:#FAFBFD;outline:none;transition:.18s;">
+                <button class="btn btn-p" onclick="saveGoogleClientId()">💾 Lưu</button>
+              </div>
+            </div>
+            <ol style="font-size:11px;color:var(--TM);line-height:2;padding-left:16px;margin-top:8px;">
+              <li>Vào <strong>console.cloud.google.com</strong> → Tạo project mới</li>
+              <li>APIs & Services → Credentials → Create OAuth 2.0 Client ID</li>
+              <li>Application type: <strong>Web application</strong></li>
+              <li>Authorized JavaScript origins: <code style="background:#F4F6FB;padding:1px 5px;border-radius:4px;">https://thanh-pt91.github.io</code></li>
+              <li>Copy Client ID → dán vào ô trên → Lưu</li>
+            </ol>
+          </div>
           <div style="background:#FFF8E1;border:1.5px solid #F6D860;border-radius:9px;padding:14px 16px;margin-bottom:14px;font-size:12px;color:#7A6200;">
             <div style="font-weight:800;margin-bottom:6px;">⚡ Lỗi "You do not have permission to call DriveApp"?</div>
             <div>→ Bạn chưa cấp quyền Drive cho script. Làm bước <strong>3</strong> bên dưới trước khi Deploy!</div>
@@ -852,6 +874,7 @@ const S = {
     requestTypes: ['Thay đổi địa chỉ','Thay đổi người nhận','Thay đổi thông tin','Giao gấp'],
     scriptUrl: '',
     secretToken: '',
+    googleClientId: '',
   },
   pendingAction: null,
   pendingReject: null,
@@ -1257,9 +1280,55 @@ function doLogin() {
 }
 
 function toggleGmailInput() {
+  // Nếu có Google Client ID → dùng OAuth thực sự
+  if (S.config.googleClientId) {
+    initGoogleOAuth();
+    return;
+  }
+  // Fallback: nhập email thủ công
   const w = document.getElementById('gmailInputWrap');
   w.style.display = w.style.display === 'none' ? 'block' : 'none';
   if (w.style.display === 'block') setTimeout(() => document.getElementById('gmailInput').focus(), 50);
+}
+
+function initGoogleOAuth() {
+  if (typeof google === 'undefined' || !google.accounts) {
+    toast('⏳ Google đang tải, thử lại sau giây lát...', 'inf');
+    return;
+  }
+  google.accounts.id.initialize({
+    client_id: S.config.googleClientId,
+    callback: handleGoogleCredential,
+    auto_select: false,
+    cancel_on_tap_outside: true,
+  });
+  google.accounts.id.prompt((notification) => {
+    if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+      // Fallback sang popup nếu one-tap không hiện
+      google.accounts.id.renderButton(
+        document.getElementById('googleBtnMount'),
+        { theme:'outline', size:'large', width:300, text:'signin_with', locale:'vi' }
+      );
+    }
+  });
+}
+
+function handleGoogleCredential(response) {
+  try {
+    // Decode JWT payload để lấy email
+    const payload = JSON.parse(atob(response.credential.split('.')[1]));
+    const email   = (payload.email || '').toLowerCase();
+    const acc = S.accounts.find(a => a.email.toLowerCase() === email);
+    if (!acc) {
+      document.getElementById('loginErr').textContent = `❌ Gmail "${email}" chưa được đăng ký. Liên hệ Admin.`;
+      document.getElementById('loginErr').classList.add('show');
+      return;
+    }
+    document.getElementById('loginErr').classList.remove('show');
+    loginAs(acc);
+  } catch(e) {
+    toast('❌ Lỗi xử lý Google login: ' + e.message, 'err');
+  }
 }
 
 function loginWithGoogle() {
@@ -1275,6 +1344,14 @@ function loginWithGoogle() {
   document.getElementById('gmailInputWrap').style.display = 'none';
   document.getElementById('gmailInput').value = '';
   loginAs(acc);
+}
+
+function saveGoogleClientId() {
+  const id = (document.getElementById('googleClientId').value || '').trim();
+  S.config.googleClientId = id;
+  saveLocal();
+  if (id) toast('✅ Đã lưu Google Client ID!', 'ok');
+  else toast('Đã xóa Google Client ID', 'inf');
 }
 
 function loginAs(acc) {
@@ -2155,6 +2232,11 @@ function submitAcc() {
       acc.dept=dept||'Chưa phân bổ'; acc.role=role;
       if (pass && pass.length >= 6) acc.password = pass;
       else if (pass && pass.length > 0) { toast('Mật khẩu tối thiểu 6 ký tự!','err'); return; }
+      // Nếu đang sửa tài khoản đang đăng nhập → cập nhật UI ngay
+      if (S.currentUser && S.currentUser.id === editId) {
+        S.currentUser = acc;
+        updateUIForUser(acc);
+      }
     }
   } else {
     if (!pass || pass.length < 6) { toast('Mật khẩu tối thiểu 6 ký tự!','err'); return; }
@@ -2286,6 +2368,9 @@ function renderAll() {
     if (S.config.secretToken) document.getElementById('secretToken').value = S.config.secretToken;
     setSyncStatus('synced','URL đã cấu hình');
     updateConnStatus(true);
+  }
+  if (S.config.googleClientId) {
+    document.getElementById('googleClientId').value = S.config.googleClientId;
   }
   document.getElementById('scriptPre').textContent = APPS_SCRIPT;
 
