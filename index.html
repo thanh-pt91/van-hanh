@@ -361,6 +361,27 @@ tbody td{padding:12px 14px;font-size:12px;color:var(--TX);vertical-align:middle;
 </head>
 <body>
 
+<!-- FIRST-TIME SETUP SCREEN -->
+<div class="login-screen hide" id="setupScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#181C28"/></svg></div>
+      <div><div style="font-size:18px;font-weight:800;">DataFlow</div><div style="font-size:11px;color:var(--TM);">Thiết lập lần đầu</div></div>
+    </div>
+    <div style="background:#F0FFF4;border:1.5px solid #9AE6B4;border-radius:9px;padding:12px 14px;margin-bottom:18px;font-size:12px;color:#276749;">
+      🎉 Chào mừng! Hãy tạo tài khoản Admin để bắt đầu sử dụng hệ thống.
+    </div>
+    <div class="fgrp-login"><label>Họ và tên *</label><input id="su-name" type="text" placeholder="Nguyễn Văn Admin"></div>
+    <div class="fgrp-login"><label>Email *</label><input id="su-email" type="email" placeholder="admin@company.vn"></div>
+    <div class="fgrp-login"><label>Tên đăng nhập *</label><input id="su-user" type="text" placeholder="admin"></div>
+    <div class="fgrp-login"><label>Mật khẩu * <span style="font-size:10px;color:var(--TM);font-weight:400;">(tối thiểu 8 ký tự)</span></label><input id="su-pw" type="password" placeholder="Tạo mật khẩu mạnh..."></div>
+    <div class="fgrp-login"><label>Xác nhận mật khẩu *</label><input id="su-pw2" type="password" placeholder="Nhập lại mật khẩu" onkeydown="if(event.key==='Enter')doSetup()"></div>
+    <div class="login-err" id="setupErr">Vui lòng điền đầy đủ!</div>
+    <button class="btn-login" onclick="doSetup()">Tạo tài khoản Admin</button>
+    <div class="login-foot">Bước này chỉ thực hiện 1 lần duy nhất</div>
+  </div>
+</div>
+
 <!-- LOGIN SCREEN -->
 <div class="login-screen hide" id="loginScreen">
   <div class="login-card">
@@ -1015,7 +1036,7 @@ function nowStr() {
 // ══════════════════════════════════════════
 // INIT & PERSISTENCE
 // ══════════════════════════════════════════
-const APP_VERSION = '1.4'; // tăng số này khi cần reset localStorage
+const APP_VERSION = '1.5';
 
 function saveLocal() {
   localStorage.setItem('df_requests', JSON.stringify(S.requests));
@@ -1058,11 +1079,8 @@ function loadLocal() {
   // Migration: nếu tài khoản cũ không có password → reset về default
   const needsMigration = S.accounts.some(a => !a.username);
   if (needsMigration || !S.accounts.length) {
-    // KHÔNG lưu mật khẩu mặc định trong code
-    // Admin sẽ tự tạo tài khoản qua Google Sheets hoặc lần đầu đăng nhập
-    S.accounts = [
-      { id:'a1', name:'Admin', email:'admin@kootoro.vn', username:'admin', password:'', dept:'Ban Giám đốc', role:'admin', mustChangePw: true },
-    ];
+    // Không lưu mật khẩu trong code — admin tự thiết lập lần đầu
+    S.accounts = [];
     localStorage.setItem('df_accounts', JSON.stringify(S.accounts));
   }
 
@@ -1201,6 +1219,26 @@ function copyToken() {
 }
 
 // ══════════════════════════════════════════
+// ── First-time setup ──
+function doSetup() {
+  const name  = document.getElementById('su-name').value.trim();
+  const email = document.getElementById('su-email').value.trim();
+  const uname = document.getElementById('su-user').value.trim();
+  const pw    = document.getElementById('su-pw').value;
+  const pw2   = document.getElementById('su-pw2').value;
+  const err   = document.getElementById('setupErr');
+  if (!name || !email || !uname || !pw) { err.textContent='Vui lòng điền đầy đủ!'; err.classList.add('show'); return; }
+  if (pw.length < 8) { err.textContent='Mật khẩu tối thiểu 8 ký tự!'; err.classList.add('show'); return; }
+  if (pw !== pw2)    { err.textContent='Mật khẩu xác nhận không khớp!'; err.classList.add('show'); return; }
+  err.classList.remove('show');
+  const admin = { id:'a1', name, email, username: uname, password: pw, dept:'Quản trị', role:'admin' };
+  S.accounts = [admin];
+  saveLocal(); syncToSheets();
+  document.getElementById('setupScreen').classList.add('hide');
+  toast('✅ Tài khoản Admin đã được tạo!','ok');
+  loginAs(admin);
+}
+
 // AUTH — LOGIN / LOGOUT
 // ══════════════════════════════════════════
 function doLogin() {
@@ -2255,8 +2293,11 @@ function renderAll() {
   renderAll();
   document.getElementById('btnCreate').disabled = true; // disabled cho đến khi login
 
-  // Khôi phục session nếu có
-  try {
+  // Nếu chưa có tài khoản nào → hiện màn hình thiết lập lần đầu
+  if (!S.accounts.length) {
+    document.getElementById('setupScreen').classList.remove('hide');
+    return;
+  }
     const sess = sessionStorage.getItem('df_session');
     if (sess) {
       const { id } = JSON.parse(sess);
