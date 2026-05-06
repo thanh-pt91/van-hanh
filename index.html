@@ -93,6 +93,31 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--BG);color:var(--TX
 .dr input{flex:1;padding:8px 9px;border:1.5px solid var(--BO);border-radius:7px;font-family:inherit;font-size:11px;color:var(--TX);background:#FAFBFD;outline:none;transition:.18s;}
 .dr input:focus{border-color:var(--Y);background:#fff;}
 .drs{font-size:12px;color:var(--TM);}
+.daterange-wrap{display:flex;align-items:center;gap:6px;padding:7px 11px;border:1.5px solid var(--BO);border-radius:8px;background:#FAFBFD;cursor:pointer;transition:.18s;position:relative;user-select:none;}
+.daterange-wrap:hover{border-color:#C0C6D8;}
+.daterange-wrap.open{border-color:var(--Y);background:#fff;}
+input[type="date"]::-webkit-calendar-picker-indicator{opacity:.5;cursor:pointer;margin:0;}
+/* Custom calendar picker */
+.drp{position:fixed;z-index:9999;background:var(--CA);border:1.5px solid var(--BO);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.15);padding:14px;display:none;width:256px;}
+.drp.show{display:block;animation:fIn .15s ease;}
+.drp-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.drp-nav button{border:1.5px solid var(--BO);background:#fff;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;color:var(--TX);transition:.15s;flex-shrink:0;}
+.drp-nav button:hover{background:var(--BG);}
+.drp-title{font-size:13px;font-weight:700;color:var(--TX);}
+.drp-grid{display:grid;grid-template-columns:repeat(7,32px);grid-auto-rows:32px;gap:0;}
+.drp-dow{font-size:10px;font-weight:700;color:var(--TM);display:flex;align-items:center;justify-content:center;}
+.drp-day{display:flex;align-items:center;justify-content:center;font-size:12px;border-radius:6px;cursor:pointer;color:var(--TX);transition:.1s;}
+.drp-day:hover:not(.empty):not(.disabled){background:var(--BG);}
+.drp-day.empty,.drp-day.disabled{cursor:default;color:transparent;}
+.drp-day.today{font-weight:700;color:var(--IN);}
+.drp-day.start,.drp-day.end{background:var(--Y);color:#181C28;font-weight:800;}
+.drp-day.start{border-radius:6px 0 0 6px;}
+.drp-day.end{border-radius:0 6px 6px 0;}
+.drp-day.start.end{border-radius:6px;}
+.drp-day.inrange{background:rgba(245,197,24,.2);border-radius:0;}
+.drp-hint-bar{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--BO);}
+.drp-hint{font-size:11px;color:var(--TM);}
+.drp-divider{width:1px;background:var(--BO);align-self:stretch;flex-shrink:0;margin:0 4px;}
 
 /* TABLE */
 .tc{background:var(--CA);border:1px solid var(--BO);border-radius:var(--R);box-shadow:var(--SH2);overflow:hidden;}
@@ -490,7 +515,15 @@ tbody td{padding:12px 14px;font-size:12px;color:var(--TX);vertical-align:middle;
       <div class="fcard">
         <div class="fgrid">
           <div class="fl"><label>Mã TID</label><input class="fi" type="text" id="fTid" placeholder="Nhập mã TID..." oninput="filterTable()"></div>
-          <div class="fl"><label>Ngày tạo</label><div class="dr"><input type="date" id="fD1"><span class="drs">→</span><input type="date" id="fD2"></div></div>
+          <div class="fl"><label>Ngày tạo</label>
+            <div class="daterange-wrap" id="drpWrap" onclick="toggleDRP()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--TM);flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span id="drpDisplay" style="font-size:12px;color:var(--TM);flex:1;white-space:nowrap;">Chọn khoảng ngày...</span>
+              <button id="drpClearBtn" onclick="clearDRP(event)" style="display:none;border:none;background:none;cursor:pointer;color:var(--TM);font-size:16px;padding:0 2px;line-height:1;flex-shrink:0;">×</button>
+              <!-- Hidden inputs for filter logic -->
+              <input type="hidden" id="fD1"><input type="hidden" id="fD2">
+            </div>
+          </div>
           <div class="fl"><label>Loại yêu cầu</label><select class="fs-el" id="fType" onchange="filterTable()"><option value="">Tất cả</option></select></div>
           <div class="fl"><label>Trạng thái</label>
             <select class="fs-el" id="fStatus" onchange="filterTable()">
@@ -767,6 +800,20 @@ tbody td{padding:12px 14px;font-size:12px;color:var(--TX);vertical-align:middle;
       <button class="btn-cm" onclick="closeM('mAcc')">Hủy</button>
       <button class="btn-ok" onclick="submitAcc()">Lưu tài khoản</button>
     </div>
+  </div>
+</div>
+
+<!-- DATE RANGE PICKER POPUP -->
+<div class="drp" id="drpPop">
+  <div class="drp-nav">
+    <button onclick="drpPrev(event)">‹</button>
+    <span class="drp-title" id="drpTitle"></span>
+    <button onclick="drpNext(event)">›</button>
+  </div>
+  <div class="drp-grid" id="drpGrid"></div>
+  <div class="drp-hint-bar">
+    <span class="drp-hint" id="drpHint">Chọn ngày bắt đầu</span>
+    <button onclick="clearDRP(event)" style="border:1.5px solid var(--BO);border-radius:7px;background:#fff;padding:4px 12px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;color:var(--TM);">Xóa</button>
   </div>
 </div>
 
@@ -1400,16 +1447,135 @@ function switchTab(t) {
 // ══════════════════════════════════════════
 let filteredReqs = [];
 
+// ══════════════════════════════════════════
+// CUSTOM DATE RANGE PICKER (single month)
+// ══════════════════════════════════════════
+const DRP = { start:null, end:null, year:0, month:0 };
+const DAYS_VI   = ['CN','T2','T3','T4','T5','T6','T7'];
+const MONTHS_VI = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+
+function dateStr(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function fmtDate(s){ if(!s) return ''; const [y,m,d]=s.split('-'); return d+'/'+m+'/'+y; }
+
+function initDRP(){
+  const n = new Date();
+  DRP.year  = n.getFullYear();
+  DRP.month = n.getMonth();
+  renderDRP();
+}
+
+function renderDRP(){
+  document.getElementById('drpTitle').textContent = MONTHS_VI[DRP.month]+' '+DRP.year;
+  const today      = dateStr(new Date());
+  const firstDay   = new Date(DRP.year, DRP.month, 1).getDay();
+  const daysInMonth= new Date(DRP.year, DRP.month+1, 0).getDate();
+  let html = DAYS_VI.map(d=>`<div class="drp-dow">${d}</div>`).join('');
+  for(let i=0;i<firstDay;i++) html+=`<div class="drp-day empty"></div>`;
+  for(let d=1;d<=daysInMonth;d++){
+    const ds = DRP.year+'-'+String(DRP.month+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    let cls='drp-day';
+    if(ds===today) cls+=' today';
+    if(DRP.start && ds===DRP.start) cls+=' start';
+    if(DRP.end   && ds===DRP.end)   cls+=' end';
+    if(DRP.start && DRP.end && ds>DRP.start && ds<DRP.end) cls+=' inrange';
+    html+=`<div class="${cls}" onclick="drpSelect(event,'${ds}')">${d}</div>`;
+  }
+  document.getElementById('drpGrid').innerHTML = html;
+  // hint
+  const hint = document.getElementById('drpHint');
+  if(!DRP.start) hint.textContent='Chọn ngày bắt đầu';
+  else if(!DRP.end) hint.textContent=`${fmtDate(DRP.start)} → ?`;
+  else hint.textContent=`${fmtDate(DRP.start)} → ${fmtDate(DRP.end)}`;
+}
+
+function drpSelect(e, ds){
+  e.stopPropagation();
+  if(!DRP.start || (DRP.start && DRP.end)){
+    DRP.start=ds; DRP.end=null;
+    renderDRP();
+  } else {
+    if(ds<DRP.start){ DRP.end=DRP.start; DRP.start=ds; }
+    else DRP.end=ds;
+    applyDRP();
+  }
+}
+
+function applyDRP(){
+  document.getElementById('fD1').value = DRP.start||'';
+  document.getElementById('fD2').value = DRP.end||DRP.start||'';
+  updateDRPDisplay();
+  renderDRP();
+  filterTable();
+  setTimeout(closeDRP,200);
+}
+
+function updateDRPDisplay(){
+  const disp=document.getElementById('drpDisplay');
+  const btn =document.getElementById('drpClearBtn');
+  if(DRP.start){
+    disp.textContent = DRP.end && DRP.end!==DRP.start
+      ? `${fmtDate(DRP.start)} → ${fmtDate(DRP.end)}`
+      : fmtDate(DRP.start);
+    disp.style.color='var(--TX)'; btn.style.display='block';
+  } else {
+    disp.textContent='Chọn khoảng ngày...'; disp.style.color='var(--TM)'; btn.style.display='none';
+  }
+}
+
+function toggleDRP(){
+  const pop =document.getElementById('drpPop');
+  const wrap=document.getElementById('drpWrap');
+  if(pop.classList.contains('show')){ closeDRP(); return; }
+  initDRP();
+  const rect=wrap.getBoundingClientRect();
+  const pw=256, ph=300;
+  let left=rect.left, top=rect.bottom+6;
+  if(left+pw>window.innerWidth-8) left=window.innerWidth-pw-8;
+  if(left<8) left=8;
+  if(top+ph>window.innerHeight-8) top=rect.top-ph-6;
+  pop.style.left=left+'px'; pop.style.top=top+'px';
+  pop.classList.add('show'); wrap.classList.add('open');
+}
+
+function closeDRP(){
+  document.getElementById('drpPop').classList.remove('show');
+  document.getElementById('drpWrap').classList.remove('open');
+}
+
+function drpPrev(e){ e.stopPropagation(); DRP.month--; if(DRP.month<0){DRP.month=11;DRP.year--;} renderDRP(); }
+function drpNext(e){ e.stopPropagation(); DRP.month++; if(DRP.month>11){DRP.month=0;DRP.year++;} renderDRP(); }
+
+function clearDRP(e){
+  e.stopPropagation();
+  DRP.start=null; DRP.end=null;
+  document.getElementById('fD1').value='';
+  document.getElementById('fD2').value='';
+  updateDRPDisplay(); renderDRP(); filterTable(); closeDRP();
+}
+
+document.addEventListener('click', e=>{
+  const wrap=document.getElementById('drpWrap');
+  const pop =document.getElementById('drpPop');
+  if(wrap&&pop&&!wrap.contains(e.target)&&!pop.contains(e.target)) closeDRP();
+});
+function syncDateRange(){}
+function clearDates(e){ clearDRP(e); }
+
 function filterTable() {
-  const q = (document.getElementById('searchInput').value||'').toLowerCase();
-  const tid = (document.getElementById('fTid').value||'').toLowerCase();
-  const type = document.getElementById('fType').value;
+  const q      = (document.getElementById('searchInput').value||'').toLowerCase();
+  const tid    = (document.getElementById('fTid').value||'').toLowerCase();
+  const type   = document.getElementById('fType').value;
   const status = document.getElementById('fStatus').value;
+  const d1     = document.getElementById('fD1').value;
+  const d2     = document.getElementById('fD2').value;
   filteredReqs = S.requests.filter(r => {
     if (q && !r.tid.toLowerCase().includes(q) && !r.title.toLowerCase().includes(q)) return false;
     if (tid && !r.tid.toLowerCase().includes(tid)) return false;
     if (type && r.type !== type) return false;
     if (status && r.status !== status) return false;
+    const rDate = normalizeDate(r.date);
+    if (d1 && rDate < d1) return false;
+    if (d2 && rDate > d2) return false;
     return true;
   });
   renderTable();
