@@ -2297,13 +2297,23 @@ function renderAccounts() {
 
 function openAccModal(id) {
   if (!can('manageAcc')) { toast('Không có quyền quản lý tài khoản!','err'); return; }
-  ['aN','aE','aP','aD'].forEach(x=>document.getElementById(x).value='');
-  document.getElementById('aR').value='';
+  // Reset tất cả fields
+  ['aN','aE','aU','aP','aD'].forEach(x => document.getElementById(x).value = '');
+  document.getElementById('aR').value = '';
   document.getElementById('accEditId').value = id || '';
   document.getElementById('accMTitle').textContent = id ? 'Chỉnh sửa tài khoản' : 'Tạo tài khoản mới';
+  document.getElementById('aP').placeholder = id ? 'Để trống = giữ nguyên mật khẩu' : 'Tối thiểu 6 ký tự';
+
   if (id) {
-    const acc = S.accounts.find(a=>a.id===id);
-    if (acc) { document.getElementById('aN').value=acc.name; document.getElementById('aE').value=acc.email; document.getElementById('aD').value=acc.dept; document.getElementById('aR').value=acc.role; }
+    const acc = S.accounts.find(a => a.id === id);
+    if (acc) {
+      document.getElementById('aN').value = acc.name    || '';
+      document.getElementById('aE').value = acc.email   || '';
+      document.getElementById('aU').value = acc.username || '';
+      document.getElementById('aD').value = acc.dept    || '';
+      document.getElementById('aR').value = acc.role    || '';
+      // Không điền password khi edit — để trống = giữ nguyên
+    }
   }
   openM('mAcc');
 }
@@ -2518,9 +2528,21 @@ function renderAll() {
   renderAll();
   document.getElementById('btnCreate').disabled = true; // disabled cho đến khi login
 
-  // Nếu chưa có tài khoản nào → hiện màn hình thiết lập lần đầu
+  // Nếu chưa có tài khoản nào
   if (!S.accounts.length) {
-    document.getElementById('setupScreen').classList.remove('hide');
+    if (validUrl) {
+      // Có Sheets URL → tự động tải tài khoản từ Sheets trước
+      toast('⏳ Đang tải tài khoản từ Google Sheets...', 'inf');
+      loadFromSheets().then(() => {
+        if (!S.accounts.length) {
+          // Sheets cũng trống → cho thiết lập lần đầu
+          document.getElementById('setupScreen').classList.remove('hide');
+        }
+      });
+    } else {
+      // Không có Sheets URL → thiết lập lần đầu
+      document.getElementById('setupScreen').classList.remove('hide');
+    }
     return;
   }
 
@@ -2546,7 +2568,7 @@ function renderAll() {
     document.getElementById('topbarUser').onclick = toggleUserMenu;
   }
 
-  if (validUrl) setTimeout(loadFromSheets, 500);
+  if (validUrl) setTimeout(loadFromSheets, 800);
 })();
 </script>
 </body>
