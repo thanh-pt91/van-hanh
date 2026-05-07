@@ -1089,7 +1089,7 @@ function nowStr() {
 // ══════════════════════════════════════════
 // INIT & PERSISTENCE
 // ══════════════════════════════════════════
-const APP_VERSION = '1.6';
+const APP_VERSION = '1.7';
 
 function saveLocal() {
   localStorage.setItem('df_requests', JSON.stringify(S.requests));
@@ -1114,26 +1114,23 @@ function loadLocal() {
   // Xóa cache nếu version cũ hơn
   const savedVer = localStorage.getItem('df_version');
   if (savedVer !== APP_VERSION) {
-    // Chỉ xóa requests và images — GIỮ LẠI config và accounts
+    // Xóa data + config cũ → APP_CONFIG sẽ tự điền lại
     localStorage.removeItem('df_requests');
     localStorage.removeItem('df_images');
+    localStorage.removeItem('df_config');
     localStorage.setItem('df_version', APP_VERSION);
   }
 
-  try {
-    const r = localStorage.getItem('df_requests');
-    const a = localStorage.getItem('df_accounts');
-    const c = localStorage.getItem('df_config');
-    const i = localStorage.getItem('df_images');
-    if (r) S.requests = JSON.parse(r);
-    if (a) S.accounts = JSON.parse(a);
-    if (c) S.config = Object.assign(S.config, JSON.parse(c));
-    // APP_CONFIG chỉ là FALLBACK — chỉ dùng khi localStorage chưa có giá trị
-    if (!S.config.scriptUrl   && APP_CONFIG.scriptUrl)      S.config.scriptUrl      = APP_CONFIG.scriptUrl;
-    if (!S.config.secretToken && APP_CONFIG.secretToken)    S.config.secretToken    = APP_CONFIG.secretToken;
-    if (!S.config.googleClientId && APP_CONFIG.googleClientId) S.config.googleClientId = APP_CONFIG.googleClientId;
-    if (i) S.images   = JSON.parse(i);
-  } catch(e) {}
+  // Load từng item an toàn, lỗi item nào không ảnh hưởng item khác
+  try { const r = localStorage.getItem('df_requests'); if (r) S.requests = JSON.parse(r); } catch(e) {}
+  try { const a = localStorage.getItem('df_accounts'); if (a) S.accounts = JSON.parse(a); } catch(e) {}
+  try { const c = localStorage.getItem('df_config');   if (c) S.config   = Object.assign(S.config, JSON.parse(c)); } catch(e) {}
+  try { const i = localStorage.getItem('df_images');   if (i) S.images   = JSON.parse(i); } catch(e) {}
+
+  // APP_CONFIG LUÔN ghi đè — nằm ngoài try-catch để đảm bảo luôn chạy
+  if (APP_CONFIG.scriptUrl)      S.config.scriptUrl      = APP_CONFIG.scriptUrl;
+  if (APP_CONFIG.secretToken)    S.config.secretToken    = APP_CONFIG.secretToken;
+  if (APP_CONFIG.googleClientId) S.config.googleClientId = APP_CONFIG.googleClientId;
 
   // Migration: nếu tài khoản cũ không có password → reset về default
   const needsMigration = S.accounts.some(a => !a.username);
