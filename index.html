@@ -1089,7 +1089,7 @@ function nowStr() {
 // ══════════════════════════════════════════
 // INIT & PERSISTENCE
 // ══════════════════════════════════════════
-const APP_VERSION = '1.5';
+const APP_VERSION = '1.6';
 
 function saveLocal() {
   localStorage.setItem('df_requests', JSON.stringify(S.requests));
@@ -1114,7 +1114,9 @@ function loadLocal() {
   // Xóa cache nếu version cũ hơn
   const savedVer = localStorage.getItem('df_version');
   if (savedVer !== APP_VERSION) {
-    ['df_accounts','df_requests','df_config','df_images'].forEach(k => localStorage.removeItem(k));
+    // Chỉ xóa requests và images — GIỮ LẠI config và accounts
+    localStorage.removeItem('df_requests');
+    localStorage.removeItem('df_images');
     localStorage.setItem('df_version', APP_VERSION);
   }
 
@@ -1125,11 +1127,11 @@ function loadLocal() {
     const i = localStorage.getItem('df_images');
     if (r) S.requests = JSON.parse(r);
     if (a) S.accounts = JSON.parse(a);
-    if (c) S.config   = Object.assign(S.config, JSON.parse(c));
-    // APP_CONFIG nhúng trong file luôn ghi đè (nguồn tin cậy nhất)
-    if (APP_CONFIG.scriptUrl)      S.config.scriptUrl      = APP_CONFIG.scriptUrl;
-    if (APP_CONFIG.secretToken)    S.config.secretToken    = APP_CONFIG.secretToken;
-    if (APP_CONFIG.googleClientId) S.config.googleClientId = APP_CONFIG.googleClientId;
+    if (c) S.config = Object.assign(S.config, JSON.parse(c));
+    // APP_CONFIG chỉ là FALLBACK — chỉ dùng khi localStorage chưa có giá trị
+    if (!S.config.scriptUrl   && APP_CONFIG.scriptUrl)      S.config.scriptUrl      = APP_CONFIG.scriptUrl;
+    if (!S.config.secretToken && APP_CONFIG.secretToken)    S.config.secretToken    = APP_CONFIG.secretToken;
+    if (!S.config.googleClientId && APP_CONFIG.googleClientId) S.config.googleClientId = APP_CONFIG.googleClientId;
     if (i) S.images   = JSON.parse(i);
   } catch(e) {}
 
