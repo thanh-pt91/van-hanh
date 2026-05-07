@@ -1405,10 +1405,11 @@ function initGoogleOAuth() {
 
 function handleGoogleCredential(response) {
   try {
-    // Decode JWT payload để lấy email
     const payload = JSON.parse(atob(response.credential.split('.')[1]));
     const email   = (payload.email || '').toLowerCase();
     const acc = S.accounts.find(a => a.email && a.email.toLowerCase() === email);
+    if (!acc) {
+      document.getElementById('loginErr').textContent = `❌ Gmail "${email}" chưa được đăng ký. Liên hệ Admin.`;
       document.getElementById('loginErr').classList.add('show');
       return;
     }
