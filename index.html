@@ -428,6 +428,16 @@ tbody td{padding:12px 14px;font-size:12px;color:var(--TX);vertical-align:middle;
       <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
     <button class="btn-login" onclick="doLogin()">Đăng nhập</button>
+
+    <!-- Sync từ Sheets nếu thiết bị mới -->
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--BO);">
+      <div style="font-size:11px;color:var(--TM);margin-bottom:8px;text-align:center;">Thiết bị mới? Tải tài khoản từ Google Sheets:</div>
+      <div style="display:flex;gap:6px;">
+        <input type="url" id="loginScriptUrl" placeholder="URL Apps Script..." style="flex:1;padding:8px 11px;border:1.5px solid var(--BO);border-radius:8px;font-family:inherit;font-size:11px;color:var(--TX);background:#FAFBFD;outline:none;" value="">
+        <button onclick="syncLoginFromSheets()" style="padding:8px 14px;border:none;border-radius:8px;background:var(--IN);color:#fff;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">⬇️ Tải</button>
+      </div>
+    </div>
+
     <div class="login-foot">Phiên bản 1.0 · DataFlow Management</div>
   </div>
 </div>
@@ -865,9 +875,17 @@ tbody td{padding:12px 14px;font-size:12px;color:var(--TX);vertical-align:middle;
 </div>
 
 <script>
-// ══════════════════════════════════════════
-// STATE
-// ══════════════════════════════════════════
+// ╔══════════════════════════════════════════════════════╗
+// ║           CẤU HÌNH HỆ THỐNG — CHỈNH SỬA TẠI ĐÂY    ║
+// ╠══════════════════════════════════════════════════════╣
+// ║  Điền thông tin bên dưới trước khi upload GitHub    ║
+// ╚══════════════════════════════════════════════════════╝
+const APP_CONFIG = {
+  scriptUrl:      'https://script.google.com/macros/s/AKfycbzU4LO_lMZPTlETjUqPx_JAsZJtBDyNiswMfTRlihvlTj-3PlKQ3K72ADmhg89fgvuWVQ/exec',
+  secretToken:    'TzDUZYHWR7QCRSB4GmQVdjV9FhkBhP4S',
+  googleClientId: '',   // Google OAuth Client ID (tuỳ chọn)
+};
+// ══════════════════════════════════════════════════════
 const S = {
   role: 'admin',
   currentUser: null,   // { id, name, email, username, role, dept }
@@ -876,9 +894,9 @@ const S = {
   images: {},
   config: {
     requestTypes: ['Thay đổi địa chỉ','Thay đổi người nhận','Thay đổi thông tin','Giao gấp'],
-    scriptUrl: '',
-    secretToken: '',
-    googleClientId: '',
+    scriptUrl:      APP_CONFIG.scriptUrl      || '',
+    secretToken:    APP_CONFIG.secretToken    || '',
+    googleClientId: APP_CONFIG.googleClientId || '',
   },
   pendingAction: null,
   pendingReject: null,
@@ -1100,6 +1118,10 @@ function loadLocal() {
     if (r) S.requests = JSON.parse(r);
     if (a) S.accounts = JSON.parse(a);
     if (c) S.config   = Object.assign(S.config, JSON.parse(c));
+    // APP_CONFIG nhúng trong file luôn ghi đè (nguồn tin cậy nhất)
+    if (APP_CONFIG.scriptUrl)      S.config.scriptUrl      = APP_CONFIG.scriptUrl;
+    if (APP_CONFIG.secretToken)    S.config.secretToken    = APP_CONFIG.secretToken;
+    if (APP_CONFIG.googleClientId) S.config.googleClientId = APP_CONFIG.googleClientId;
     if (i) S.images   = JSON.parse(i);
   } catch(e) {}
 
@@ -1265,7 +1287,35 @@ function copyToken() {
 }
 
 // ══════════════════════════════════════════
-// ── First-time setup ──
+// Sync tài khoản từ Sheets ngay trên màn hình login (thiết bị mới)
+async function syncLoginFromSheets() {
+  const urlInput = document.getElementById('loginScriptUrl');
+  let url = (urlInput?.value || '').trim();
+  // Nếu đã có config trong localStorage → dùng luôn
+  if (!url && S.config.scriptUrl) url = S.config.scriptUrl;
+  if (!url) { toast('Nhập URL Apps Script để đồng bộ!','err'); return; }
+  if (!url.includes('script.google.com')) { toast('URL không hợp lệ!','err'); return; }
+
+  toast('⏳ Đang tải tài khoản từ Sheets...','inf');
+  try {
+    const tokenParam = S.config.secretToken ? `&token=${encodeURIComponent(S.config.secretToken)}` : '';
+    const res  = await fetch(url + '?action=load' + tokenParam, { mode:'cors' });
+    const data = await res.json();
+    if (data.error === 'UNAUTHORIZED') throw new Error('Token không hợp lệ');
+    if (data.error) throw new Error(data.error);
+    if (Array.isArray(data.accounts) && data.accounts.length) {
+      S.accounts = data.accounts;
+      // Lưu cả scriptUrl để lần sau tự dùng
+      S.config.scriptUrl = url;
+      saveLocal();
+      toast(`✅ Đã tải ${data.accounts.length} tài khoản — hãy đăng nhập!`,'ok');
+    } else {
+      toast('⚠️ Sheets không có tài khoản nào','inf');
+    }
+  } catch(e) {
+    toast('❌ Lỗi: ' + e.message,'err');
+  }
+}
 function doSetup() {
   const name  = document.getElementById('su-name').value.trim();
   const email = document.getElementById('su-email').value.trim();
@@ -1440,6 +1490,9 @@ function requireLogin(msg, afterLoginFn) {
   document.getElementById('loginPass').value = '';
   document.getElementById('gmailInputWrap').style.display = 'none';
   document.getElementById('gmailInput').value = '';
+  // Pre-fill script URL nếu đã có
+  const urlInput = document.getElementById('loginScriptUrl');
+  if (urlInput && S.config.scriptUrl) urlInput.value = S.config.scriptUrl;
   document.getElementById('loginScreen').classList.remove('hide');
 }
 
