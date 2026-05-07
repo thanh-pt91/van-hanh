@@ -1359,11 +1359,12 @@ function doLogin() {
   const pass  = document.getElementById('loginPass').value;
   const err   = document.getElementById('loginErr');
 
-  const acc = S.accounts.find(a =>
-    (a.email.toLowerCase() === input ||
-     (a.username && a.username.toLowerCase() === input)) &&
-    String(a.password) === pass   // String() để handle khi Sheets trả về số
-  );
+  const acc = S.accounts.find(a => {
+    const emailMatch  = a.email && a.email.toLowerCase() === input;
+    const unameMatch  = a.username && a.username.toLowerCase() === input;
+    const passMatch   = String(a.password) === pass;
+    return (emailMatch || unameMatch) && passMatch;
+  });
   if (!acc) { err.classList.add('show'); return; }
   err.classList.remove('show');
   loginAs(acc);
@@ -1408,9 +1409,7 @@ function handleGoogleCredential(response) {
     // Decode JWT payload để lấy email
     const payload = JSON.parse(atob(response.credential.split('.')[1]));
     const email   = (payload.email || '').toLowerCase();
-    const acc = S.accounts.find(a => a.email.toLowerCase() === email);
-    if (!acc) {
-      document.getElementById('loginErr').textContent = `❌ Gmail "${email}" chưa được đăng ký. Liên hệ Admin.`;
+    const acc = S.accounts.find(a => a.email && a.email.toLowerCase() === email);
       document.getElementById('loginErr').classList.add('show');
       return;
     }
@@ -1424,7 +1423,7 @@ function handleGoogleCredential(response) {
 function loginWithGoogle() {
   const email = (document.getElementById('gmailInput').value || '').trim().toLowerCase();
   if (!email) { toast('Vui lòng nhập địa chỉ Gmail!', 'err'); return; }
-  const acc = S.accounts.find(a => a.email.toLowerCase() === email);
+  const acc = S.accounts.find(a => a.email && a.email.toLowerCase() === email);
   if (!acc) {
     document.getElementById('loginErr').textContent = '❌ Gmail này chưa được đăng ký. Liên hệ Admin.';
     document.getElementById('loginErr').classList.add('show');
