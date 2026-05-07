@@ -1312,7 +1312,11 @@ async function syncLoginFromSheets() {
     if (data.error === 'UNAUTHORIZED') throw new Error('Token không hợp lệ');
     if (data.error) throw new Error(data.error);
     if (Array.isArray(data.accounts) && data.accounts.length) {
-      S.accounts = data.accounts;
+      // Chuẩn hóa password về string (Sheets có thể trả về số)
+      S.accounts = data.accounts.map(a => ({
+        ...a,
+        password: a.password !== undefined && a.password !== null ? String(a.password) : '',
+      }));
       // Lưu cả scriptUrl để lần sau tự dùng
       S.config.scriptUrl = url;
       saveLocal();
@@ -1358,7 +1362,7 @@ function doLogin() {
   const acc = S.accounts.find(a =>
     (a.email.toLowerCase() === input ||
      (a.username && a.username.toLowerCase() === input)) &&
-    a.password === pass
+    String(a.password) === pass   // String() để handle khi Sheets trả về số
   );
   if (!acc) { err.classList.add('show'); return; }
   err.classList.remove('show');
@@ -1580,7 +1584,7 @@ function doChangePw() {
   const nw   = document.getElementById('pwNew').value;
   const cfm  = document.getElementById('pwCfm').value;
   const acc  = S.accounts.find(a => a.id === S.currentUser.id);
-  if (!acc || acc.password !== old) { toast('❌ Mật khẩu hiện tại không đúng!', 'err'); return; }
+  if (!acc || String(acc.password) !== old) { toast('❌ Mật khẩu hiện tại không đúng!', 'err'); return; }
   if (nw.length < 6) { toast('❌ Mật khẩu mới tối thiểu 6 ký tự!', 'err'); return; }
   if (nw !== cfm)    { toast('❌ Mật khẩu xác nhận không khớp!', 'err'); return; }
   acc.password = nw;
