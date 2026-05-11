@@ -154,6 +154,7 @@ tbody td{padding:12px 14px;font-size:12px;color:var(--TX);vertical-align:middle;
 .ba{padding:4px 10px;border-radius:6px;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;border:1.5px solid;transition:.15s;white-space:nowrap;}
 .ba:disabled{opacity:.3;cursor:not-allowed;}
 .ba-view{border-color:var(--BO);background:#fff;color:var(--TM);}          .ba-view:hover:not(:disabled){background:var(--BG);}
+.ba-edit{border-color:#FBD38D;background:#FFFBEB;color:#B7791F;}            .ba-edit:hover:not(:disabled){background:#FEEBC8;}
 .ba-recv{border-color:#90CDF4;background:#EBF8FF;color:#2B6CB0;}            .ba-recv:hover:not(:disabled){background:#BEE3F8;}
 .ba-proc{border-color:#9AE6B4;background:#F0FFF4;color:#276749;}            .ba-proc:hover:not(:disabled){background:#C6F6D5;}
 .ba-conf{border-color:#D6BCFA;background:#FAF5FF;color:#6B21A8;}            .ba-conf:hover:not(:disabled){background:#E9D8FD;}
@@ -787,6 +788,30 @@ tbody td{padding:12px 14px;font-size:12px;color:var(--TX);vertical-align:middle;
     <div class="mf">
       <button class="btn-cm" onclick="closeM('mCreate')">Hủy bỏ</button>
       <button class="btn-ok" onclick="submitCreate()">Gửi yêu cầu</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: CHỈNH SỬA YÊU CẦU ═══ -->
+<div class="overlay" id="mEdit" onclick="closeIfOv(event,'mEdit')">
+  <div class="modal" style="width:540px;">
+    <div class="mh"><div class="mt">✏️ Chỉnh sửa yêu cầu</div><button class="mx" onclick="closeM('mEdit')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <input type="hidden" id="editReqId">
+    <div style="background:#FFFBEB;border:1.5px solid #FBD38D;border-radius:9px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#B7791F;">
+      ⚠️ Mọi thay đổi sẽ được lưu vào <strong>lịch sử thao tác</strong>.
+    </div>
+    <div class="fg">
+      <div class="fgrp"><label>Mã TID</label><input id="eTid" type="text" placeholder="Mã TID" readonly style="background:#F4F6FB;cursor:not-allowed;"></div>
+      <div class="fgrp"><label>Loại yêu cầu *</label><select id="eType"></select></div>
+      <div class="fgrp"><label>Giá trị cũ</label><input id="eOld" type="text" placeholder="Giá trị cũ"></div>
+      <div class="fgrp"><label>Giá trị mới</label><input id="eNew" type="text" placeholder="Giá trị mới"></div>
+    </div>
+    <div class="fgrp"><label>Tiêu đề *</label><input id="eTitle" type="text" placeholder="Tiêu đề yêu cầu"></div>
+    <div class="fgrp"><label>Mô tả <span class="opt">(không bắt buộc)</span></label><textarea id="eDesc" rows="3" placeholder="Mô tả chi tiết..."></textarea></div>
+    <div class="fgrp"><label>Ghi chú chỉnh sửa *</label><input id="eNote" type="text" placeholder="Lý do chỉnh sửa (bắt buộc để lưu lịch sử)..."></div>
+    <div class="mf">
+      <button class="btn-cm" onclick="closeM('mEdit')">Hủy</button>
+      <button class="btn-ok" onclick="submitEdit()">💾 Lưu thay đổi</button>
     </div>
   </div>
 </div>
@@ -1856,6 +1881,11 @@ function renderTable() {
 function buildActions(r) {
   const id = r.id;
   let btns = `<button class="ba ba-view" onclick="openDetail('${id}')">Chi tiết</button>`;
+
+  // Nút chỉnh sửa — chỉ khi chưa hoàn thành/từ chối và có quyền
+  if (['wait','proc','risk'].includes(r.status) && can('create')) {
+    btns += `<button class="ba ba-edit" onclick="openEdit('${id}')">✏️ Sửa</button>`;
+  }
   if (r.status === 'wait') {
     if (can('receive')) {
       btns += `<button class="ba ba-recv" onclick="askAction('${id}','receive')">Tiếp nhận</button>`;
@@ -2068,8 +2098,74 @@ function openLightbox(src) {
 }
 
 // ══════════════════════════════════════════
-// CREATE REQUEST
+// EDIT REQUEST
 // ══════════════════════════════════════════
+function openEdit(id) {
+  requireLogin('Bạn cần đăng nhập để chỉnh sửa.', () => {
+    if (!can('create')) { toast('Không có quyền chỉnh sửa!','err'); return; }
+    const r = S.requests.find(x => x.id === id);
+    if (!r) return;
+    document.getElementById('editReqId').value = id;
+    document.getElementById('eTid').value   = r.tid;
+    document.getElementById('eOld').value   = r.oldVal === '—' ? '' : r.oldVal;
+    document.getElementById('eNew').value   = r.newVal === '—' ? '' : r.newVal;
+    document.getElementById('eTitle').value = r.title;
+    document.getElementById('eDesc').value  = r.desc || '';
+    document.getElementById('eNote').value  = '';
+    // Populate type dropdown
+    const sel = document.getElementById('eType');
+    sel.innerHTML = '';
+    S.config.requestTypes.forEach(t => {
+      const o = document.createElement('option');
+      o.value = t; o.textContent = t;
+      if (t === r.type) o.selected = true;
+      sel.appendChild(o);
+    });
+    openM('mEdit');
+  });
+}
+
+function submitEdit() {
+  const id    = document.getElementById('editReqId').value;
+  const title = document.getElementById('eTitle').value.trim();
+  const note  = document.getElementById('eNote').value.trim();
+  if (!title) { toast('Tiêu đề không được trống!','err'); return; }
+  if (!note)  { toast('Vui lòng nhập ghi chú lý do chỉnh sửa!','err'); return; }
+
+  const r = S.requests.find(x => x.id === id);
+  if (!r) return;
+
+  // Lưu snapshot trước khi sửa vào history
+  const editor = S.currentUser ? S.currentUser.name : ROLES_CFG[S.role].label;
+  const changes = [];
+  if (r.type   !== document.getElementById('eType').value)  changes.push(`Loại: "${r.type}" → "${document.getElementById('eType').value}"`);
+  if (r.title  !== title)                                    changes.push(`Tiêu đề: "${r.title}" → "${title}"`);
+  if ((r.oldVal === '—' ? '' : r.oldVal) !== document.getElementById('eOld').value) changes.push(`Giá trị cũ đã đổi`);
+  if ((r.newVal === '—' ? '' : r.newVal) !== document.getElementById('eNew').value) changes.push(`Giá trị mới đã đổi`);
+  if ((r.desc||'') !== document.getElementById('eDesc').value) changes.push(`Mô tả đã cập nhật`);
+
+  if (!Array.isArray(r.history)) r.history = [];
+  r.history.push({
+    action: '✏️ Chỉnh sửa nội dung',
+    user: editor,
+    role: ROLES_CFG[S.role].label,
+    time: nowStr(),
+    note: note + (changes.length ? ` | Thay đổi: ${changes.join(', ')}` : ''),
+  });
+
+  // Cập nhật dữ liệu
+  r.type   = document.getElementById('eType').value;
+  r.title  = title;
+  r.oldVal = document.getElementById('eOld').value.trim() || '—';
+  r.newVal = document.getElementById('eNew').value.trim() || '—';
+  r.desc   = document.getElementById('eDesc').value.trim();
+
+  closeM('mEdit');
+  filteredReqs = [...S.requests];
+  renderTable();
+  saveLocal(); syncToSheets();
+  toast('✅ Đã lưu chỉnh sửa + cập nhật lịch sử', 'ok');
+}
 function openCreate() {
   requireLogin('Bạn cần đăng nhập để tạo yêu cầu.', () => {
     if (!can('create')) { toast('Bạn không có quyền tạo yêu cầu!','err'); return; }
