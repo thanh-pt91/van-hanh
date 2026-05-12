@@ -760,7 +760,7 @@ tbody td{padding:12px 14px;font-size:12px;color:var(--TX);vertical-align:middle;
 </div>
 
 <!-- ═══ MODAL: TẠO YÊU CẦU ═══ -->
-<div class="overlay" id="mCreate" onclick="closeIfOv(event,'mCreate')">
+<div class="overlay" id="mCreate">
   <div class="modal" style="width:540px;">
     <div class="mh"><div class="mt">Tạo yêu cầu thay đổi</div><button class="mx" onclick="closeM('mCreate')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <div class="fg">
@@ -793,7 +793,7 @@ tbody td{padding:12px 14px;font-size:12px;color:var(--TX);vertical-align:middle;
 </div>
 
 <!-- ═══ MODAL: CHỈNH SỬA YÊU CẦU ═══ -->
-<div class="overlay" id="mEdit" onclick="closeIfOv(event,'mEdit')">
+<div class="overlay" id="mEdit">
   <div class="modal" style="width:540px;">
     <div class="mh"><div class="mt">✏️ Chỉnh sửa yêu cầu</div><button class="mx" onclick="closeM('mEdit')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
     <input type="hidden" id="editReqId">
@@ -2190,10 +2190,6 @@ function submitCreate() {
   const newV  = document.getElementById('cNew').value.trim();
   if (!tid || !type || !title) { toast('Vui lòng điền: Mã TID, Loại yêu cầu, Tiêu đề','err'); return; }
 
-  // Kiểm tra nếu ảnh vẫn đang upload
-  const stillUploading = S.editImages.some(x => x.uploading);
-  if (stillUploading) { toast('⏳ Ảnh đang được upload, vui lòng chờ...','inf'); return; }
-
   const creatorName = S.currentUser ? S.currentUser.name : ROLES_CFG[S.role].label;
   const id = 'r' + Date.now();
   const req = {
@@ -2206,17 +2202,37 @@ function submitCreate() {
   };
   S.requests.unshift(req);
 
-  // Lưu URLs ảnh: ưu tiên driveUrl, fallback về dataUrl (local)
-  if (S.editImages.length) {
-    S.images[id] = S.editImages.map(x => x.driveUrl || x.dataUrl);
-  }
-  S.editImages = [];
-
+  // Đóng modal NGAY, không chờ upload
   closeM('mCreate');
   filteredReqs = [...S.requests];
   renderTable();
-  saveLocal(); syncToSheets();
-  toast(`✅ Đã tạo yêu cầu ${tid}`,'ok');
+  toast(`✅ Đã tạo yêu cầu ${tid}`, 'ok');
+
+  // Upload ảnh + sync chạy NGẦM
+  const pendingImgs = [...S.editImages];
+  S.editImages = [];
+  (async () => {
+    if (pendingImgs.length) {
+      const urls = [];
+      for (const img of pendingImgs) {
+        if (img.driveUrl) { urls.push(img.driveUrl); continue; }
+        // Upload lên Drive nếu chưa xong
+        const hasValidUrl = S.config.scriptUrl && S.config.scriptUrl.includes('script.google.com');
+        if (hasValidUrl && img.dataUrl) {
+          const url = await uploadToDrive(img.dataUrl, 'image/jpeg', `${tid}_${Date.now()}.jpg`);
+          urls.push(url || img.dataUrl);
+        } else {
+          urls.push(img.dataUrl);
+        }
+      }
+      if (urls.length) {
+        S.images[id] = urls.filter(Boolean);
+        saveLocal();
+      }
+    }
+    saveLocal();
+    syncToSheets();
+  })();
 }
 
 // ══════════════════════════════════════════
