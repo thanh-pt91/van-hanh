@@ -581,7 +581,7 @@ tbody td{padding:12px 14px;font-size:12px;color:var(--TX);vertical-align:middle;
           <div class="t-cnt">Hiển thị <strong id="showCnt">0</strong> yêu cầu</div>
           <div class="t-acts">
             <button class="bi" title="Xuất Excel" onclick="exportCSV()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
-            <button class="bi" title="Làm mới" onclick="renderTable()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
+            <button class="bi" id="btnRefresh" title="Tải lại từ Sheets" onclick="manualRefresh()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
           </div>
         </div>
         <div style="overflow-x:auto;">
@@ -1245,7 +1245,24 @@ async function syncToSheets() {
   }
 }
 
-function forceSyncToSheets() { syncToSheets(); toast('⬆️ Đang đẩy dữ liệu lên Sheets...','inf'); }
+function manualRefresh() {
+  const btn = document.getElementById('btnRefresh');
+  if (btn) { btn.style.animation = 'spin .6s linear infinite'; btn.style.color = 'var(--IN)'; }
+  loadFromSheets().finally(() => {
+    if (btn) { btn.style.animation = ''; btn.style.color = ''; }
+  });
+}
+
+function startAutoRefresh() {
+  if (!S.config.scriptUrl) return;
+  // Tự động tải từ Sheets mỗi 60 giây
+  if (window._autoRefreshTimer) clearInterval(window._autoRefreshTimer);
+  window._autoRefreshTimer = setInterval(() => {
+    if (document.visibilityState === 'visible' && S.config.scriptUrl) {
+      loadFromSheets();
+    }
+  }, 60000);
+}
 
 function clearLocalData() {
   if (!confirm('⚠️ Xóa dữ liệu yêu cầu và tài khoản trong trình duyệt?\n\n✅ Giữ lại: URL Sheets, Secret Token, Google Client ID, Loại yêu cầu\n🗑️ Xóa: Danh sách yêu cầu, Tài khoản, Ảnh cache\n\nDữ liệu trên Google Sheets vẫn được giữ nguyên.')) return;
@@ -2688,8 +2705,8 @@ function renderAll() {
       showSheetsLoading(true);
       loadFromSheets().then(() => {
         showSheetsLoading(false);
+        startAutoRefresh();
         if (!S.accounts.length) {
-          // Sheets trống → thiết lập lần đầu
           document.getElementById('setupScreen').classList.remove('hide');
         } else {
           toast('✅ Đã tải tài khoản — hãy đăng nhập!', 'ok');
@@ -2701,6 +2718,7 @@ function renderAll() {
     } else {
       // Đã có tài khoản → load Sheets ngầm để cập nhật
       setTimeout(loadFromSheets, 800);
+      startAutoRefresh();
     }
   } else if (!S.accounts.length) {
     // Không có Sheets URL → thiết lập lần đầu
