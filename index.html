@@ -461,6 +461,12 @@ tbody td{padding:12px 14px;font-size:12px;color:var(--TX);vertical-align:middle;
     Thay đổi thông tin
     <span class="n-badge" id="topBadge">0</span>
   </div>
+  <div class="nav-item" onclick="gotoPage('denbuu')" id="nav-denbuu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M12 6v6l4 2"/></svg>
+    Đền bù
+    <span class="n-badge" id="badgeDenBuu" style="display:none;">0</span>
+  </div>
+
   <div class="nav-item" onclick="gotoPageOrLogin('cauhinh')" id="nav-cauhinh">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
     Cấu hình tài khoản
@@ -597,6 +603,106 @@ tbody td{padding:12px 14px;font-size:12px;color:var(--TX);vertical-align:middle;
       </div>
     </div>
 
+    <!-- ═══ PAGE: ĐỀN BÙ ═══ -->
+    <div id="page-denbuu" style="display:none;">
+      <div class="ph">
+        <div><div class="ph-title">Đền bù thiết bị POS</div><div class="ph-sub">Danh sách bảo hành & đền bù thiết bị — TPBank</div></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-g" onclick="toggleBangGia()">💰 Bảng Giá</button>
+          <button class="btn btn-g" onclick="loadDenBuu()" id="btnRefreshDB">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Tải dữ liệu
+          </button>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats" style="grid-template-columns:repeat(5,1fr);" id="dbStats">
+        <div class="stat"><div><div class="sv" id="db-total">0</div><div class="sl">Tổng phiếu</div></div><div class="si iy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16h12V8z"/><polyline points="14 2 14 8 20 8"/></svg></div></div>
+        <div class="stat"><div><div class="sv" id="db-cost">0đ</div><div class="sl">Tổng chi phí</div></div><div class="si iy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div></div>
+        <div class="stat"><div><div class="sv" id="db-kh-paid">0</div><div class="sl">KH đã TT</div></div><div class="si ig"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div></div>
+        <div class="stat"><div><div class="sv" id="db-kh-unpaid">0</div><div class="sl">KH chưa TT</div></div><div class="si ir"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div></div>
+        <div class="stat"><div><div class="sv" id="db-bank-unpaid">0</div><div class="sl">Bank chưa TT</div></div><div class="si ip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div></div>
+      </div>
+
+      <!-- FILTER -->
+      <div class="fcard">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:11px;align-items:end;">
+          <div class="fl"><label>Tháng</label>
+            <select class="fs-el" id="dbMonth" onchange="filterDenBuu()">
+              <option value="">Tất cả</option>
+            </select>
+          </div>
+          <div class="fl"><label>TID / Tên MC</label>
+            <input class="fi" type="text" id="dbSearch" placeholder="Nhập TID hoặc tên MC..." oninput="filterDenBuu()">
+          </div>
+          <div class="fl"><label>Vấn đề</label>
+            <select class="fs-el" id="dbIssue" onchange="filterDenBuu()">
+              <option value="">Tất cả</option>
+            </select>
+          </div>
+          <div class="fl"><label>Trạng thái TT</label>
+            <select class="fs-el" id="dbStatus" onchange="filterDenBuu()">
+              <option value="">Tất cả</option>
+              <option value="paid">Đã thanh toán</option>
+              <option value="unpaid">Chưa thanh toán</option>
+            </select>
+          </div>
+          <div class="fl"><label>&nbsp;</label>
+            <button class="btn btn-p" style="padding:8px 14px;" onclick="filterDenBuu()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Tìm
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- BẢNG GIÁ -->
+      <div class="fcard" id="dbBangGia" style="display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="font-size:13px;font-weight:700;">💰 Bảng Giá linh kiện</div>
+          <button onclick="document.getElementById('dbBangGia').style.display='none'" style="border:none;background:none;cursor:pointer;color:var(--TM);font-size:18px;">×</button>
+        </div>
+        <table style="width:auto;">
+          <thead><tr><th>Bộ phận / Linh kiện</th><th>Đơn giá</th></tr></thead>
+          <tbody id="dbBangGiaBody"></tbody>
+        </table>
+      </div>
+
+      <!-- TABLE -->
+      <div class="tc">
+        <div class="t-bar">
+          <div class="t-cnt">Hiển thị <strong id="dbCount">0</strong> phiếu</div>
+          <div class="t-acts">
+            <button class="bi" title="Xuất CSV" onclick="exportDenBuu()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead><tr>
+              <th>STT</th><th>Tháng</th><th>TID</th><th>Tên MC</th><th>Vấn đề</th>
+              <th>Chi phí</th><th>Ngày</th><th>TT Khách hàng</th><th>TT Bank</th><th>Note</th>
+            </tr></thead>
+            <tbody id="dbBody"></tbody>
+          </table>
+        </div>
+        <div class="pag"><span id="dbPagInfo">Hiển thị 0 / 0</span></div>
+      </div>
+
+      <!-- Loading state -->
+      <div id="dbLoading" style="display:none;text-align:center;padding:60px;color:var(--TM);">
+        <div style="width:36px;height:36px;border:3px solid rgba(245,197,24,.3);border-top-color:var(--Y);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;"></div>
+        <p style="font-size:13px;font-weight:600;">Đang tải dữ liệu từ Google Sheets...</p>
+      </div>
+
+      <!-- Empty state -->
+      <div id="dbEmpty" style="display:none;" class="tc">
+        <div class="empty">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="opacity:.25;"><path d="M14 2H6a2 2 0 0 0-2 2v16h12V8z"/></svg>
+          <p>Chưa có dữ liệu — nhấn <strong>"Tải dữ liệu"</strong> để đồng bộ từ Sheets</p>
+        </div>
+      </div>
+    </div>
+
     <!-- ═══ PAGE: TỔNG QUAN ═══ -->
     <div id="page-tongquan" style="display:none;">
       <div class="ph"><div><div class="ph-title">Tổng quan</div><div class="ph-sub">Dashboard hoạt động</div></div></div>
@@ -696,7 +802,96 @@ tbody td{padding:12px 14px;font-size:12px;color:var(--TX);vertical-align:middle;
           </div>
 
           <div style="border-top:1px solid var(--BO);padding-top:18px;margin-top:4px;">
-            <div style="font-size:13px;font-weight:700;margin-bottom:4px;">🔑 Google OAuth (Đăng nhập bằng Google)</div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:4px;">⚖️ Kết nối module Đền bù (GAS riêng)</div>
+            <div style="font-size:12px;color:var(--TM);margin-bottom:12px;">Module Đền bù dùng Google Sheet riêng với Apps Script riêng.</div>
+            <div class="fgrp">
+              <label>URL Apps Script Đền bù</label>
+              <input type="url" id="dbScriptUrl" placeholder="https://script.google.com/macros/s/YOUR_DB_ID/exec" value="">
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+              <button class="btn btn-p" onclick="saveDbConfig()">💾 Lưu</button>
+              <button class="btn btn-g" onclick="testDbConnection()">🔍 Kiểm tra</button>
+            </div>
+            <div style="font-size:11px;color:var(--TM);line-height:1.8;margin-bottom:10px;">
+              GAS cho module Đền bù đọc từ các sheet tháng và trả về JSON.<br>
+              Copy code bên dưới, dán vào Apps Script của Sheet bảo hành POS:
+            </div>
+            <div class="code-block" style="max-height:200px;">
+              <button class="copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('dbAppsScriptCode').textContent).then(()=>toast('✅ Đã copy!','ok'))">Copy</button>
+              <pre id="dbAppsScriptCode">// ═══ GAS Module Đền bù — TPBank POS ═══
+const SHEET_ID_DB = 'YOUR_BẢOHÀNH_SHEET_ID';
+
+// Các sheet hợp lệ: Tồn trước đó + các tháng
+const VALID_SHEETS = ['Tồn trước đó','T09.2025','T10.2025','T11.2025',
+  'T12.2025','T1.2026','T2.2026','T3.2026','T4.2026','T5.2026'];
+
+function doGet(e) {
+  try {
+    const ss = SpreadsheetApp.openById(SHEET_ID_DB);
+    const records = [], months = [];
+    VALID_SHEETS.forEach(sheetName => {
+      const sh = ss.getSheetByName(sheetName);
+      if (!sh) return;
+      months.push(sheetName);
+      const data = sh.getDataRange().getValues();
+      if (data.length < 2) return;
+      const h = data[0].map(c => String(c).trim().toLowerCase());
+      // Tìm index các cột quan trọng
+      const iStt   = findCol(h, ['stt']);
+      const iTid   = findCol(h, ['tid']);
+      const iMC    = findCol(h, ['tên mc','mc','ten mc']);
+      const iVanDe = findCol(h, ['vấn đề','van de','vấn de']);
+      const iChi   = findCol(h, ['chi phí','chi phi']);
+      const iNgay  = findCol(h, ['ngày','ngay']);
+      const iTtKH  = findCol(h, ['tình trạng thanh toán ( kh)','tình trạng thanh toán (kh)']);
+      const iTtBank= findCol(h, ['tình trạng thanh toán ( bank)','tình trạng thanh toán (bank)']);
+      const iNote  = findCol(h, ['note']);
+      data.slice(1).forEach(row => {
+        const tid = row[iTid];
+        if (!tid) return;
+        records.push({
+          sheet: sheetName,
+          stt:    row[iStt]  || '',
+          tid:    String(tid).replace(/\.0$/, ''),
+          tenMC:  row[iMC]   || '',
+          vanDe:  row[iVanDe]|| '',
+          chiPhi: row[iChi]  || 0,
+          ngay:   row[iNgay] || '',
+          ttKH:   row[iTtKH] || 'Chưa Thanh Toán',
+          ttBank: row[iTtBank]|| 'Chưa Thanh Toán',
+          note:   row[iNote] || '',
+        });
+      });
+    });
+    // Đọc Bảng Giá
+    const bgSh = ss.getSheetByName('Bảng Giá');
+    const bangGia = [];
+    if (bgSh) {
+      const bgData = bgSh.getDataRange().getValues();
+      bgData.slice(1).forEach(r => {
+        if (r[0] && r[1]) bangGia.push({ boPhan: r[0], gia: r[1] });
+      });
+    }
+    return output({ records, months: VALID_SHEETS.filter(s=>months.includes(s)), bangGia });
+  } catch(err) {
+    return output({ error: err.message });
+  }
+}
+
+function findCol(headers, keys) {
+  for (let k of keys) {
+    const i = headers.findIndex(h => h.includes(k));
+    if (i >= 0) return i;
+  }
+  return -1;
+}
+
+function output(data) {
+  return ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}</pre>
+            </div>
+          </div>
             <div style="font-size:12px;color:var(--TM);margin-bottom:12px;">Cho phép người dùng đăng nhập bằng tài khoản Google thực sự thay vì nhập email thủ công.</div>
             <div class="fgrp">
               <label>Google Client ID <span style="font-weight:400;color:var(--TM);font-style:italic;">(từ Google Cloud Console)</span></label>
@@ -909,14 +1104,12 @@ tbody td{padding:12px 14px;font-size:12px;color:var(--TX);vertical-align:middle;
 
 <script>
 // ╔══════════════════════════════════════════════════════╗
-// ║           CẤU HÌNH HỆ THỐNG — CHỈNH SỬA TẠI ĐÂY    ║
-// ╠══════════════════════════════════════════════════════╣
-// ║  Điền thông tin bên dưới trước khi upload GitHub    ║
+// ║  CẤU HÌNH — Được inject tự động bởi GitHub Actions  ║
+// ║  Không cần chỉnh sửa thủ công                       ║
 // ╚══════════════════════════════════════════════════════╝
 const APP_CONFIG = {
-  scriptUrl:      'https://script.google.com/macros/s/AKfycbzU4LO_lMZPTlETjUqPx_JAsZJtBDyNiswMfTRlihvlTj-3PlKQ3K72ADmhg89fgvuWVQ/exec',
-  secretToken:    'TzDUZYHWR7QCRSB4GmQVdjV9FhkBhP4S',
-  googleClientId: '',   // Google OAuth Client ID (tuỳ chọn)
+  scriptUrl:      '__SCRIPT_URL__',   // GitHub Actions sẽ thay bằng URL thật
+  googleClientId: '',                  // Tuỳ chọn: Google OAuth
 };
 // ══════════════════════════════════════════════════════
 const S = {
@@ -927,9 +1120,12 @@ const S = {
   images: {},
   config: {
     requestTypes: ['Thay đổi địa chỉ','Thay đổi người nhận','Thay đổi thông tin','Giao gấp'],
-    scriptUrl:      APP_CONFIG.scriptUrl      || '',
-    secretToken:    APP_CONFIG.secretToken    || '',
+    scriptUrl:      APP_CONFIG.scriptUrl || '',
     googleClientId: APP_CONFIG.googleClientId || '',
+  },
+  session: {
+    token:     null,   // Session token từ GAS sau khi login
+    expiresAt: null,   // Thời gian hết hạn
   },
   pendingAction: null,
   pendingReject: null,
@@ -968,38 +1164,26 @@ const AV_COLORS = ['#3182CE','#38A169','#D69E2E','#7C3AED','#E53E3E','#DD6B20','
 // APPS SCRIPT CODE (to display & copy)
 // ══════════════════════════════════════════
 const APPS_SCRIPT = `// ═══════════════════════════════════════════════════
-// DataFlow Management — Google Apps Script
-// Sheet ID: 1msOvb0xSHRtmvUVMplRdoebOV2usXp_694BZ7RZ3T7I
+// DataFlow Management — Google Apps Script v2
+// Bảo mật: Session Token (không dùng secretToken nữa)
 // ═══════════════════════════════════════════════════
 const SPREADSHEET_ID  = '1msOvb0xSHRtmvUVMplRdoebOV2usXp_694BZ7RZ3T7I';
 const DRIVE_FOLDER_NAME = 'DataFlow_Images';
+const SESSION_HOURS   = 8;   // Session hết hạn sau 8 tiếng
 
-// 🔐 ĐỔI CHUỖI NÀY THÀNH MẬT KHẨU RIÊNG CỦA BẠN
-// Phải khớp với Secret Token đã nhập trong trang cài đặt
-const SECRET_TOKEN = 'THAY_BANG_TOKEN_CUA_BAN';
-
-// ── Kiểm tra token ──
-function verifyToken(token) {
-  return token === SECRET_TOKEN;
-}
-
-// ⚡ BƯỚC BẮT BUỘC: Chạy hàm này 1 lần để cấp quyền Drive
-function setup() {
+// ── Xác thực session ──
+function verifySession(token) {
+  if (!token) return null;
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  Logger.log('Sheets OK: ' + ss.getName());
-  const folders = DriveApp.getFoldersByName(DRIVE_FOLDER_NAME);
-  const folder = folders.hasNext()
-    ? folders.next()
-    : DriveApp.createFolder(DRIVE_FOLDER_NAME);
-  Logger.log('Drive OK — Folder: ' + folder.getName());
-  Logger.log('✅ Cấp quyền thành công! Bây giờ Deploy lại Web App.');
+  const sessions = readSheet(ss, 'Sessions');
+  const s = sessions.find(x => x.token === token && new Date(x.expiresAt) > new Date());
+  return s || null;
 }
 
-// ── GET: Tải dữ liệu ──
+// ── GET: Tải dữ liệu (cần session hợp lệ) ──
 function doGet(e) {
-  if (!verifyToken(e.parameter.token)) {
-    return output({ error: 'UNAUTHORIZED', message: 'Token không hợp lệ' });
-  }
+  const session = verifySession(e.parameter.session);
+  if (!session) return output({ error: 'SESSION_INVALID', message: 'Phiên đăng nhập hết hạn — vui lòng đăng nhập lại' });
   try {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     return output({
@@ -1007,30 +1191,118 @@ function doGet(e) {
       accounts: readSheet(ss, 'Accounts'),
       config:   readSheet(ss, 'Config'),
     });
-  } catch(err) {
-    return output({ error: err.message });
-  }
+  } catch(err) { return output({ error: err.message }); }
 }
 
-// ── POST: Ghi dữ liệu / upload ảnh ──
+// ── POST: Xử lý các action ──
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
-    if (!verifyToken(data.token)) {
-      return output({ error: 'UNAUTHORIZED', message: 'Token không hợp lệ' });
-    }
+
+    // LOGIN — không cần session
+    if (data.action === 'login') return handleLogin(data);
+
+    // Mọi action khác cần session hợp lệ
+    const session = verifySession(data.session);
+    if (!session) return output({ error: 'SESSION_INVALID', message: 'Phiên đăng nhập hết hạn' });
+
+    if (data.action === 'logout')      return handleLogout(data.session);
     if (data.action === 'uploadImage') return doUploadImage(data);
+
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     if (data.requests !== undefined) writeSheet(ss, 'Requests', data.requests);
     if (data.accounts !== undefined) writeSheet(ss, 'Accounts', data.accounts);
     if (data.config   !== undefined) writeSheet(ss, 'Config',   data.config);
     return output({ success: true });
-  } catch(err) {
-    return output({ error: err.message });
+  } catch(err) { return output({ error: err.message }); }
+}
+
+// ── Đăng nhập → tạo session ──
+function handleLogin(data) {
+  try {
+    const { username, password } = data;
+    if (!username || !password) return output({ error: 'MISSING_FIELDS' });
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const accounts = readSheet(ss, 'Accounts');
+    const acc = accounts.find(a =>
+      (a.username === username || (a.email && a.email.toLowerCase() === username.toLowerCase())) &&
+      String(a.password) === String(password)
+    );
+    if (!acc) return output({ error: 'INVALID_CREDENTIALS', message: 'Sai tài khoản hoặc mật khẩu' });
+
+    // Tạo session token
+    const token     = Utilities.getUuid();
+    const expiresAt = new Date(Date.now() + SESSION_HOURS * 3600 * 1000).toISOString();
+    const createdAt = new Date().toISOString();
+
+    // Lưu session vào sheet
+    let sh = ss.getSheetByName('Sessions') || ss.insertSheet('Sessions');
+    if (sh.getLastRow() === 0) sh.appendRow(['token','userId','username','expiresAt','createdAt']);
+    sh.appendRow([token, acc.id, acc.username, expiresAt, createdAt]);
+
+    // Trả về session token + thông tin tài khoản (KHÔNG trả về password)
+    return output({
+      success: true,
+      sessionToken: token,
+      expiresAt,
+      account: {
+        id:       acc.id,
+        name:     acc.name,
+        email:    acc.email || '',
+        username: acc.username,
+        dept:     acc.dept || '',
+        role:     acc.role,
+      }
+    });
+  } catch(err) { return output({ error: err.message }); }
+}
+
+// ── Đăng xuất → xóa session ──
+function handleLogout(token) {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sh = ss.getSheetByName('Sessions');
+    if (!sh) return output({ success: true });
+    const data = sh.getDataRange().getValues();
+    for (let i = data.length - 1; i >= 1; i--) {
+      if (data[i][0] === token) { sh.deleteRow(i + 1); break; }
+    }
+    return output({ success: true });
+  } catch(err) { return output({ error: err.message }); }
+}
+
+// ── Dọn session hết hạn (chạy tự động qua trigger) ──
+function cleanExpiredSessions() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sh = ss.getSheetByName('Sessions');
+  if (!sh) return;
+  const data = sh.getDataRange().getValues();
+  const now  = new Date();
+  for (let i = data.length - 1; i >= 1; i--) {
+    if (new Date(data[i][3]) < now) sh.deleteRow(i + 1);
   }
 }
 
-// ── Upload ảnh → Drive ──
+// ⚡ BƯỚC BẮT BUỘC: Chạy hàm này 1 lần để cấp quyền + tạo trigger dọn session
+function setup() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  Logger.log('Sheets OK: ' + ss.getName());
+  const folders = DriveApp.getFoldersByName(DRIVE_FOLDER_NAME);
+  const folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(DRIVE_FOLDER_NAME);
+  Logger.log('Drive OK — Folder: ' + folder.getName());
+  // Tạo trigger tự động dọn session hết hạn mỗi 6 tiếng
+  ScriptApp.getProjectTriggers()
+    .filter(t => t.getHandlerFunction() === 'cleanExpiredSessions')
+    .forEach(t => ScriptApp.deleteTrigger(t));
+  ScriptApp.newTrigger('cleanExpiredSessions').timeBased().everyHours(6).create();
+  Logger.log('✅ Cấp quyền + trigger OK! Bây giờ Deploy lại Web App.');
+}
+
+function getOrCreateFolder() {
+  const folders = DriveApp.getFoldersByName(DRIVE_FOLDER_NAME);
+  return folders.hasNext() ? folders.next() : DriveApp.createFolder(DRIVE_FOLDER_NAME);
+}
+
 function doUploadImage(data) {
   try {
     const folder  = getOrCreateFolder();
@@ -1040,15 +1312,8 @@ function doUploadImage(data) {
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
     const fileId  = file.getId();
     const url     = 'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w1200';
-    return output({ success: true, url, fileId, folder: DRIVE_FOLDER_NAME });
-  } catch(err) {
-    return output({ error: err.message });
-  }
-}
-
-function getOrCreateFolder() {
-  const folders = DriveApp.getFoldersByName(DRIVE_FOLDER_NAME);
-  return folders.hasNext() ? folders.next() : DriveApp.createFolder(DRIVE_FOLDER_NAME);
+    return output({ success: true, url, fileId });
+  } catch(err) { return output({ error: err.message }); }
 }
 
 function readSheet(ss, name) {
@@ -1073,20 +1338,15 @@ function writeSheet(ss, name, records) {
   if (!records || !records.length) return;
   const headers = Object.keys(records[0]);
   sh.getRange(1, 1, 1, headers.length).setValues([headers]);
-  const rows = records.map(r =>
-    headers.map(h => {
-      const v = r[h];
-      return (v === null || v === undefined) ? '' :
-             (typeof v === 'object' ? JSON.stringify(v) : v);
-    })
-  );
+  const rows = records.map(r => headers.map(h => {
+    const v = r[h];
+    return (v === null || v === undefined) ? '' : (typeof v === 'object' ? JSON.stringify(v) : v);
+  }));
   if (rows.length) sh.getRange(2, 1, rows.length, headers.length).setValues(rows);
 }
 
 function output(data) {
-  return ContentService
-    .createTextOutput(JSON.stringify(data))
-    .setMimeType(ContentService.MimeType.JSON);
+  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
 }`;
 
 // ── Chuẩn hoá ngày về YYYY-MM-DD ──
@@ -1198,10 +1458,15 @@ async function loadFromSheets() {
   if (!url) { toast('Chưa cấu hình URL Google Apps Script', 'err'); return; }
   setSyncStatus('syncing','Đang tải dữ liệu...');
   try {
-    const tokenParam = S.config.secretToken ? `&token=${encodeURIComponent(S.config.secretToken)}` : '';
+    const tokenParam = S.session.token ? `&session=${encodeURIComponent(S.session.token)}` : '';
     const res = await fetch(url + '?action=load' + tokenParam, { mode:'cors' });
     const data = await res.json();
-    if (data.error === 'UNAUTHORIZED') throw new Error('Token không hợp lệ — kiểm tra lại Secret Token');
+    if (data.error === 'SESSION_INVALID') {
+      S.session.token = null; S.session.expiresAt = null;
+      sessionStorage.removeItem('df_session');
+      toast('⚠️ Phiên đăng nhập hết hạn — vui lòng đăng nhập lại', 'inf');
+      throw new Error('Phiên đăng nhập hết hạn');
+    }
     if (data.error) throw new Error(data.error);
     // Luôn ghi đè local bằng dữ liệu từ Sheets (kể cả khi Sheets trống)
     if (Array.isArray(data.requests)) S.requests = data.requests;
@@ -1226,11 +1491,10 @@ async function syncToSheets() {
   if (!url) return;
   setSyncStatus('syncing','Đang đồng bộ...');
   try {
-    // Tách thông tin nhạy cảm: lưu accounts đầy đủ (có password) vào sheet riêng
     const payload = {
-      token: S.config.secretToken || '',
+      session: S.session.token || '',
       requests: S.requests.map(r => ({ ...r })),
-      accounts: S.accounts,  // bao gồm password để đồng bộ qua máy
+      accounts: S.accounts,
       config: [{ key:'requestTypes', value: JSON.stringify(S.config.requestTypes) }],
     };
     await fetch(url, {
@@ -1347,7 +1611,7 @@ async function syncLoginFromSheets() {
 
   toast('⏳ Đang tải tài khoản từ Sheets...','inf');
   try {
-    const tokenParam = S.config.secretToken ? `&token=${encodeURIComponent(S.config.secretToken)}` : '';
+    const tokenParam = S.session.token ? `&session=${encodeURIComponent(S.session.token)}` : '';
     const res  = await fetch(url + '?action=load' + tokenParam, { mode:'cors' });
     const data = await res.json();
     if (data.error === 'UNAUTHORIZED') throw new Error('Token không hợp lệ');
@@ -1395,20 +1659,65 @@ function doSetup() {
 
 // AUTH — LOGIN / LOGOUT
 // ══════════════════════════════════════════
-function doLogin() {
-  const input = document.getElementById('loginUser').value.trim().toLowerCase();
+async function doLogin() {
+  const input = (document.getElementById('loginUser').value || '').trim().toLowerCase();
   const pass  = document.getElementById('loginPass').value;
   const err   = document.getElementById('loginErr');
-
-  const acc = S.accounts.find(a => {
-    const emailMatch  = a.email && a.email.toLowerCase() === input;
-    const unameMatch  = a.username && a.username.toLowerCase() === input;
-    const passMatch   = String(a.password) === pass;
-    return (emailMatch || unameMatch) && passMatch;
-  });
-  if (!acc) { err.classList.add('show'); return; }
+  if (!input || !pass) {
+    err.textContent = '❌ Vui lòng nhập tài khoản và mật khẩu!';
+    err.classList.add('show'); return;
+  }
+  const url = S.config.scriptUrl;
+  if (!url || url.includes('__SCRIPT_URL__')) {
+    err.textContent = '❌ Chưa cấu hình URL Apps Script!';
+    err.classList.add('show'); return;
+  }
+  // Hiện trạng thái loading
+  const btn = document.querySelector('#loginScreen .btn-login');
+  if (btn) { btn.textContent = '⏳ Đang xác thực...'; btn.disabled = true; }
   err.classList.remove('show');
-  loginAs(acc);
+  try {
+    const res  = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'login', username: input, password: pass }),
+      redirect: 'follow',
+    });
+    const data = await res.json();
+    if (data.error === 'INVALID_CREDENTIALS') {
+      err.textContent = '❌ Sai tài khoản hoặc mật khẩu!';
+      err.classList.add('show'); return;
+    }
+    if (data.error) throw new Error(data.error);
+    // Lưu session token
+    S.session.token     = data.sessionToken;
+    S.session.expiresAt = data.expiresAt;
+    sessionStorage.setItem('df_session', JSON.stringify({ token: data.sessionToken, expiresAt: data.expiresAt, id: data.account.id }));
+    // Cập nhật account list
+    const acc = data.account;
+    const idx = S.accounts.findIndex(a => a.id === acc.id);
+    if (idx >= 0) S.accounts[idx] = { ...S.accounts[idx], ...acc };
+    else S.accounts.push(acc);
+    S.currentUser = S.accounts.find(a => a.id === acc.id) || acc;
+    S.role = acc.role;
+    saveLocal();
+    err.classList.remove('show');
+    document.getElementById('loginScreen').classList.add('hide');
+    updateUIForUser(S.currentUser);
+    renderTable();
+    document.getElementById('btnCreate').disabled = !can('create');
+    toast(`👋 Xin chào, ${acc.name}!`, 'ok');
+    loadFromSheets();
+    if (S._pendingLoginAction) {
+      const fn = S._pendingLoginAction; S._pendingLoginAction = null;
+      setTimeout(fn, 200);
+    }
+  } catch(e) {
+    err.textContent = '❌ Lỗi kết nối: ' + e.message;
+    err.classList.add('show');
+  } finally {
+    if (btn) { btn.textContent = 'Đăng nhập'; btn.disabled = false; }
+  }
 }
 
 function toggleGmailInput() {
@@ -1555,22 +1864,28 @@ function requireLogin(msg, afterLoginFn) {
 }
 
 function doLogout() {
-  S.currentUser = null;
-  S.role = 'viewer';
+  // Gọi GAS để xóa session server-side
+  if (S.session.token && S.config.scriptUrl) {
+    fetch(S.config.scriptUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'logout', session: S.session.token }),
+      redirect: 'follow',
+    }).catch(() => {});
+  }
+  S.currentUser = null; S.role = 'viewer';
+  S.session.token = null; S.session.expiresAt = null;
   S._pendingLoginAction = null;
   sessionStorage.removeItem('df_session');
   document.getElementById('loginScreen').classList.add('hide');
   document.getElementById('userMenu').classList.remove('show');
-  // Reset topbar to guest
   document.getElementById('topAv').textContent = '👤';
   document.getElementById('topAv').style.background = '#E2E8F4';
   document.getElementById('topAv').style.color = '#7A82A0';
   document.getElementById('topName').textContent = 'Đăng nhập';
   document.getElementById('topRole').textContent = 'Nhấn để đăng nhập';
-  // Show guest menu, hide logged-in menu
   document.getElementById('menuGuest').style.display = 'block';
   document.getElementById('menuLoggedIn').style.display = 'none';
-  // Reset sidebar
   document.getElementById('sideAv').textContent = '?';
   document.getElementById('sideAv').style.background = '#2A2D38';
   document.getElementById('sideAv').style.color = '#8B91A8';
@@ -1673,14 +1988,14 @@ function gotoPageOrLogin(p) {
   gotoPage(p);
 }
 function gotoPage(p) {
-  ['tongquan','thaydoi','cauhinh'].forEach(x => {
+  ['tongquan','thaydoi','denbuu','cauhinh'].forEach(x => {
     document.getElementById('page-'+x).style.display = 'none';
     document.getElementById('nav-'+x).classList.remove('active');
   });
   document.getElementById('page-'+p).style.display = 'block';
   document.getElementById('nav-'+p).classList.add('active');
-  const names = { tongquan:'Tổng quan', thaydoi:'Thay đổi thông tin', cauhinh:'Cấu hình tài khoản' };
-  document.getElementById('bcCur').textContent = names[p];
+  const names = { tongquan:'Tổng quan', thaydoi:'Thay đổi thông tin', denbuu:'Đền bù thiết bị', cauhinh:'Cấu hình tài khoản' };
+  document.getElementById('bcCur').textContent = names[p] || p;
   if (p === 'cauhinh') { renderAccounts(); renderTypeList(); }
 }
 
@@ -1697,8 +2012,205 @@ function switchTab(t) {
 let filteredReqs = [];
 
 // ══════════════════════════════════════════
-// CUSTOM DATE RANGE PICKER (single month)
+// MODULE: ĐỀN BÙ
 // ══════════════════════════════════════════
+const DB = {
+  raw: [],
+  filtered: [],
+  months: [],
+  bangGia: [],   // Bảng Giá linh kiện
+};
+
+// Danh sách sheet hợp lệ (Tồn trước đó + các sheet tháng)
+const DB_VALID_SHEETS = /^(Tồn trước đó|T\d{1,2}\.\d{4})$/;
+
+function toggleBangGia() {
+  const el = document.getElementById('dbBangGia');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function renderBangGia(data) {
+  const body = document.getElementById('dbBangGiaBody');
+  body.innerHTML = '';
+  (data || []).forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td style="font-size:12px;">${r.boPhan||'—'}</td>
+      <td style="font-size:12px;font-weight:700;color:var(--DG);">${fmtCost(r.gia)}</td>`;
+    body.appendChild(tr);
+  });
+}
+
+// Convert Excel serial date → DD/MM/YYYY
+function excelDateToStr(serial) {
+  if (!serial || isNaN(serial)) return '—';
+  const d = new Date((Number(serial) - 25569) * 86400 * 1000);
+  if (isNaN(d)) return '—';
+  return d.getDate().toString().padStart(2,'0') + '/' +
+         (d.getMonth()+1).toString().padStart(2,'0') + '/' +
+         d.getFullYear();
+}
+
+function fmtCost(v) {
+  if (!v || isNaN(v)) return '—';
+  return Number(v).toLocaleString('vi-VN') + 'đ';
+}
+
+async function loadDenBuu() {
+  const url = S.config.dbScriptUrl;
+  const tableEl = document.querySelector('#page-denbuu .tc');
+  if (!url) {
+    if (tableEl) tableEl.style.display = 'none';
+    document.getElementById('dbEmpty').style.display = 'block';
+    document.getElementById('dbLoading').style.display = 'none';
+    toast('⚠️ Chưa cấu hình URL GAS Đền bù — vào Cấu hình → Google Sheets', 'inf');
+    return;
+  }
+  document.getElementById('dbLoading').style.display = 'block';
+  document.getElementById('dbEmpty').style.display = 'none';
+  if (tableEl) tableEl.style.display = 'none';
+  try {
+    const res  = await fetch(url + '?action=getDenBuu', { mode:'cors' });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    DB.raw     = (data.records || []).filter(r => DB_VALID_SHEETS.test(r.sheet));
+    DB.months  = (data.months  || []).filter(m => DB_VALID_SHEETS.test(m));
+    DB.bangGia = data.bangGia  || [];
+    document.getElementById('dbLoading').style.display = 'none';
+    if (!DB.raw.length) {
+      document.getElementById('dbEmpty').style.display = 'block';
+    } else {
+      if (tableEl) tableEl.style.display = 'block';
+    }
+    renderBangGia(DB.bangGia);
+    populateDbFilters();
+    filterDenBuu();
+    toast(`✅ Đã tải ${DB.raw.length} phiếu đền bù`, 'ok');
+  } catch(e) {
+    document.getElementById('dbLoading').style.display = 'none';
+    document.getElementById('dbEmpty').style.display = 'block';
+    toast('❌ Lỗi tải dữ liệu Đền bù: ' + e.message, 'err');
+  }
+}
+
+function populateDbFilters() {
+  // Months dropdown
+  const mSel = document.getElementById('dbMonth');
+  const curM = mSel.value;
+  mSel.innerHTML = '<option value="">Tất cả tháng</option>';
+  DB.months.forEach(m => {
+    const o = document.createElement('option');
+    o.value = m; o.textContent = m;
+    if (m === curM) o.selected = true;
+    mSel.appendChild(o);
+  });
+  // Issues dropdown
+  const iSel = document.getElementById('dbIssue');
+  const curI = iSel.value;
+  const issues = [...new Set(DB.raw.map(r => r.vanDe).filter(Boolean))].sort();
+  iSel.innerHTML = '<option value="">Tất cả vấn đề</option>';
+  issues.forEach(i => {
+    const o = document.createElement('option');
+    o.value = i; o.textContent = i;
+    if (i === curI) o.selected = true;
+    iSel.appendChild(o);
+  });
+}
+
+function filterDenBuu() {
+  const month  = document.getElementById('dbMonth').value;
+  const q      = (document.getElementById('dbSearch').value || '').toLowerCase();
+  const issue  = document.getElementById('dbIssue').value;
+  const status = document.getElementById('dbStatus').value;
+
+  DB.filtered = DB.raw.filter(r => {
+    if (month && r.sheet !== month) return false;
+    if (q && !String(r.tid).includes(q) && !(r.tenMC||'').toLowerCase().includes(q)) return false;
+    if (issue && r.vanDe !== issue) return false;
+    if (status === 'paid'   && (r.ttKH !== 'Đã Thanh Toán' || r.ttBank !== 'Đã Thanh Toán')) return false;
+    if (status === 'unpaid' && r.ttKH === 'Đã Thanh Toán' && r.ttBank === 'Đã Thanh Toán') return false;
+    return true;
+  });
+  renderDenBuu();
+}
+
+function renderDenBuu() {
+  const tbody = document.getElementById('dbBody');
+  tbody.innerHTML = '';
+  document.getElementById('dbCount').textContent = DB.filtered.length;
+  document.getElementById('dbPagInfo').textContent = `Hiển thị ${DB.filtered.length} / ${DB.raw.length}`;
+
+  // Stats
+  const totalCost = DB.filtered.reduce((s,r) => s + (Number(r.chiPhi)||0), 0);
+  const khPaid    = DB.filtered.filter(r => r.ttKH   === 'Đã Thanh Toán').length;
+  const khUnpaid  = DB.filtered.filter(r => r.ttKH   !== 'Đã Thanh Toán').length;
+  const bkUnpaid  = DB.filtered.filter(r => r.ttBank !== 'Đã Thanh Toán').length;
+  document.getElementById('db-total').textContent    = DB.filtered.length;
+  document.getElementById('db-cost').textContent     = totalCost.toLocaleString('vi-VN') + 'đ';
+  document.getElementById('db-kh-paid').textContent  = khPaid;
+  document.getElementById('db-kh-unpaid').textContent= khUnpaid;
+  document.getElementById('db-bank-unpaid').textContent = bkUnpaid;
+
+  // Badge
+  const badge = document.getElementById('badgeDenBuu');
+  badge.textContent = khUnpaid;
+  badge.style.display = khUnpaid > 0 ? '' : 'none';
+
+  if (!DB.filtered.length) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td colspan="10"><div class="empty"><p>Không có dữ liệu phù hợp</p></div></td>`;
+    tbody.appendChild(tr);
+    return;
+  }
+
+  DB.filtered.forEach((r, i) => {
+    const khPaidCls   = r.ttKH   === 'Đã Thanh Toán' ? 'badge bd' : 'badge bw';
+    const bankPaidCls = r.ttBank === 'Đã Thanh Toán' ? 'badge bd' : 'badge bw';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-size:11px;color:var(--TM);">${r.stt||'—'}</td>
+      <td><span style="font-size:10px;background:#EBF8FF;color:#2B6CB0;padding:2px 8px;border-radius:100px;font-weight:700;">${r.sheet||'—'}</span></td>
+      <td><span class="tid">${r.tid||'—'}</span></td>
+      <td style="font-size:12px;max-width:160px;">${r.tenMC||'—'}</td>
+      <td style="font-size:12px;">${r.vanDe||'—'}</td>
+      <td style="font-size:12px;font-weight:700;color:var(--DG);">${fmtCost(r.chiPhi)}</td>
+      <td style="font-size:11px;color:var(--TM);">${excelDateToStr(r.ngay)}</td>
+      <td><span class="${khPaidCls}">${r.ttKH||'—'}</span></td>
+      <td><span class="${bankPaidCls}">${r.ttBank||'—'}</span></td>
+      <td style="font-size:11px;color:var(--TM);max-width:180px;">${r.note||'—'}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function exportDenBuu() {
+  const headers = ['STT','Tháng','TID','Tên MC','Vấn đề','Chi phí','Ngày','TT KH','TT Bank','Note'];
+  const rows = DB.filtered.map(r => [r.stt||'',r.sheet||'',r.tid||'',r.tenMC||'',r.vanDe||'',r.chiPhi||'',excelDateToStr(r.ngay),r.ttKH||'',r.ttBank||'',r.note||'']);
+  const csv = [headers,...rows].map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
+  a.download = `den-bu-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  toast('✅ Đã xuất CSV', 'ok');
+}
+
+function saveDbConfig() {
+  const url = (document.getElementById('dbScriptUrl').value || '').trim();
+  S.config.dbScriptUrl = url;
+  saveLocal();
+  toast(url ? '✅ Đã lưu URL GAS Đền bù' : 'Đã xóa URL GAS Đền bù', url ? 'ok' : 'inf');
+}
+
+async function testDbConnection() {
+  const url = (document.getElementById('dbScriptUrl').value || '').trim();
+  if (!url) { toast('Nhập URL trước!', 'err'); return; }
+  try {
+    const res  = await fetch(url + '?action=getDenBuu', { mode:'cors' });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    toast(`✅ Kết nối OK — ${(data.records||[]).length} phiếu`, 'ok');
+  } catch(e) {
+    toast('❌ ' + e.message, 'err');
+  }
+}
 const DRP = { start:null, end:null, year:0, month:0 };
 const DAYS_VI   = ['CN','T2','T3','T4','T5','T6','T7'];
 const MONTHS_VI = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
@@ -2667,6 +3179,9 @@ function renderAll() {
   if (S.config.googleClientId) {
     document.getElementById('googleClientId').value = S.config.googleClientId;
   }
+  if (S.config.dbScriptUrl) {
+    document.getElementById('dbScriptUrl').value = S.config.dbScriptUrl;
+  }
   document.getElementById('scriptPre').textContent = APPS_SCRIPT;
 
   // Render app ngay (không chặn bằng login)
@@ -2678,12 +3193,19 @@ function renderAll() {
     try {
       const sess = sessionStorage.getItem('df_session');
       if (sess) {
-        const { id } = JSON.parse(sess);
-        const acc = S.accounts.find(a => a.id === id);
-        if (acc) {
-          S.currentUser = acc; S.role = acc.role;
-          updateUIForUser(acc);
-          document.getElementById('btnCreate').disabled = !can('create');
+        const { token, expiresAt, id } = JSON.parse(sess);
+        // Kiểm tra session chưa hết hạn
+        if (token && expiresAt && new Date(expiresAt) > new Date()) {
+          S.session.token     = token;
+          S.session.expiresAt = expiresAt;
+          const acc = S.accounts.find(a => a.id === id);
+          if (acc) {
+            S.currentUser = acc; S.role = acc.role;
+            updateUIForUser(acc);
+            document.getElementById('btnCreate').disabled = !can('create');
+          }
+        } else {
+          sessionStorage.removeItem('df_session');
         }
       }
     } catch(e) {}
