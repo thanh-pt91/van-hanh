@@ -1412,10 +1412,11 @@ function loadLocal() {
   try { const c = localStorage.getItem('df_config');   if (c) S.config   = Object.assign(S.config, JSON.parse(c)); } catch(e) {}
   try { const i = localStorage.getItem('df_images');   if (i) S.images   = JSON.parse(i); } catch(e) {}
 
-  // APP_CONFIG LUÔN ghi đè — nằm ngoài try-catch để đảm bảo luôn chạy
-  if (APP_CONFIG.scriptUrl)      S.config.scriptUrl      = APP_CONFIG.scriptUrl;
-  if (APP_CONFIG.secretToken)    S.config.secretToken    = APP_CONFIG.secretToken;
-  if (APP_CONFIG.googleClientId) S.config.googleClientId = APP_CONFIG.googleClientId;
+  // APP_CONFIG chỉ áp dụng khi đã được inject thật (không chứa placeholder)
+  if (APP_CONFIG.scriptUrl && !APP_CONFIG.scriptUrl.includes('__SCRIPT_URL__'))
+    S.config.scriptUrl = APP_CONFIG.scriptUrl;
+  if (APP_CONFIG.googleClientId)
+    S.config.googleClientId = APP_CONFIG.googleClientId;
 
   // Migration: nếu tài khoản cũ không có password → reset về default
   const needsMigration = S.accounts.some(a => !a.username);
@@ -1667,10 +1668,18 @@ async function doLogin() {
     err.textContent = '❌ Vui lòng nhập tài khoản và mật khẩu!';
     err.classList.add('show'); return;
   }
-  const url = S.config.scriptUrl;
-  if (!url || url.includes('__SCRIPT_URL__')) {
+  // Lấy URL: ưu tiên config, fallback sang ô nhập thủ công
+  const url = (S.config.scriptUrl && !S.config.scriptUrl.includes('__SCRIPT_URL__'))
+    ? S.config.scriptUrl
+    : (document.getElementById('loginScriptUrl')?.value || '').trim();
+  if (!url) {
     err.textContent = '❌ Chưa cấu hình URL Apps Script!';
     err.classList.add('show'); return;
+  }
+  // Lưu URL vào config nếu dùng từ ô nhập
+  if (!S.config.scriptUrl || S.config.scriptUrl.includes('__SCRIPT_URL__')) {
+    S.config.scriptUrl = url;
+    saveLocal();
   }
   // Hiện trạng thái loading
   const btn = document.querySelector('#loginScreen .btn-login');
