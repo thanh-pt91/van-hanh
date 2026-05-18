@@ -19,8 +19,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Inject URL
-        run: sed -i "s|__SCRIPT_URL__|${{ secrets.GAS_SCRIPT_URL }}|g" index.html
+      - name: Inject URLs
+        env:
+          GAS_URL: ${{ secrets.GAS_SCRIPT_URL }}
+          DB_URL: ${{ secrets.GAS_DB_SCRIPT_URL }}
+        run: |
+          sed -i "s|__SCRIPT_URL__|${GAS_URL}|g" index.html
+          sed -i "s|__DB_SCRIPT_URL__|${DB_URL}|g" index.html
+          grep -q "__SCRIPT_URL__" index.html && echo "❌ GAS_SCRIPT_URL chưa set!" && exit 1
+          echo "✅ Inject URLs thành công"
 
       - uses: actions/configure-pages@v4
 
