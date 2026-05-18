@@ -1111,8 +1111,9 @@ function output(data) {
 // ║  Không cần chỉnh sửa thủ công                       ║
 // ╚══════════════════════════════════════════════════════╝
 const APP_CONFIG = {
-  scriptUrl:      '__SCRIPT_URL__',   // GitHub Actions sẽ thay bằng URL thật
-  googleClientId: '',                  // Tuỳ chọn: Google OAuth
+  scriptUrl:      '__SCRIPT_URL__',     // GitHub Actions inject
+  dbScriptUrl:    '__DB_SCRIPT_URL__',  // GitHub Actions inject — GAS module Đền bù
+  googleClientId: '',
 };
 // ══════════════════════════════════════════════════════
 const S = {
@@ -1124,6 +1125,7 @@ const S = {
   config: {
     requestTypes: ['Thay đổi địa chỉ','Thay đổi người nhận','Thay đổi thông tin','Giao gấp'],
     scriptUrl:      APP_CONFIG.scriptUrl || '',
+    dbScriptUrl:    APP_CONFIG.dbScriptUrl || '',
     googleClientId: APP_CONFIG.googleClientId || '',
   },
   session: {
@@ -1418,6 +1420,8 @@ function loadLocal() {
   // APP_CONFIG chỉ áp dụng khi đã được inject thật (không chứa placeholder)
   if (APP_CONFIG.scriptUrl && !APP_CONFIG.scriptUrl.includes('__SCRIPT_URL__'))
     S.config.scriptUrl = APP_CONFIG.scriptUrl;
+  if (APP_CONFIG.dbScriptUrl && !APP_CONFIG.dbScriptUrl.includes('__DB_SCRIPT_URL__'))
+    S.config.dbScriptUrl = APP_CONFIG.dbScriptUrl;
   if (APP_CONFIG.googleClientId)
     S.config.googleClientId = APP_CONFIG.googleClientId;
 
