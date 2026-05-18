@@ -363,6 +363,7 @@ tbody td{padding:12px 14px;font-size:12px;color:var(--TX);vertical-align:middle;
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-thumb{background:#CBD2E8;border-radius:10px;}
 </style>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -673,7 +674,9 @@ tbody td{padding:12px 14px;font-size:12px;color:var(--TX);vertical-align:middle;
         <div class="t-bar">
           <div class="t-cnt">Hiển thị <strong id="dbCount">0</strong> phiếu</div>
           <div class="t-acts">
-            <button class="bi" title="Xuất CSV" onclick="exportDenBuu()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+            <button class="bi" title="Xuất Excel" onclick="exportDenBuuExcel()" style="color:#217346;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </button>
           </div>
         </div>
         <div style="overflow-x:auto;">
@@ -2190,15 +2193,74 @@ function renderDenBuu() {
   });
 }
 
-function exportDenBuu() {
-  const headers = ['STT','Tháng','TID','Tên MC','Vấn đề','Chi phí','Ngày','TT KH','TT Bank','Note'];
-  const rows = DB.filtered.map(r => [r.stt||'',r.sheet||'',r.tid||'',r.tenMC||'',r.vanDe||'',r.chiPhi||'',excelDateToStr(r.ngay),r.ttKH||'',r.ttBank||'',r.note||'']);
-  const csv = [headers,...rows].map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
-  a.download = `den-bu-${new Date().toISOString().slice(0,10)}.csv`;
-  a.click();
-  toast('✅ Đã xuất CSV', 'ok');
+function exportDenBuuExcel() {
+  if (!DB.filtered.length) { toast('Không có dữ liệu để xuất!', 'err'); return; }
+  if (typeof XLSX === 'undefined') { toast('❌ Thư viện Excel chưa tải xong, thử lại!', 'err'); return; }
+
+  const wb = XLSX.utils.book_new();
+
+  // ── Sheet 1: Bảng SUM theo tháng ──
+  const months = DB.months.filter(m => DB.filtered.some(r => r.sheet === m));
+
+  const sumRows = [
+    ['Tháng', 'Tổng chi phí', 'Chi phí KH chưa TT', 'Chi phí Bank chưa TT', 'Số phiếu'],
+  ];
+  let totalAll = 0, totalKhUnpaid = 0, totalBkUnpaid = 0, totalCount = 0;
+
+  months.forEach(m => {
+    const recs = DB.filtered.filter(r => r.sheet === m);
+    const tongChi  = recs.reduce((s, r) => s + (Number(r.chiPhi)||0), 0);
+    const khUnpaid = recs.filter(r => r.ttKH  !== 'Đã Thanh Toán').reduce((s,r) => s+(Number(r.chiPhi)||0), 0);
+    const bkUnpaid = recs.filter(r => r.ttBank !== 'Đã Thanh Toán').reduce((s,r) => s+(Number(r.chiPhi)||0), 0);
+    sumRows.push([m, tongChi, khUnpaid, bkUnpaid, recs.length]);
+    totalAll += tongChi; totalKhUnpaid += khUnpaid; totalBkUnpaid += bkUnpaid; totalCount += recs.length;
+  });
+  sumRows.push(['Tổng cộng', totalAll, totalKhUnpaid, totalBkUnpaid, totalCount]);
+
+  const wsSummary = XLSX.utils.aoa_to_sheet(sumRows);
+  // Style cột rộng
+  wsSummary['!cols'] = [{ wch: 16 }, { wch: 18 }, { wch: 20 }, { wch: 22 }, { wch: 10 }];
+  // Tô màu header và tổng cộng bằng cách set giá trị (xlsx free không style cell, dùng comment thay)
+  XLSX.utils.book_append_sheet(wb, wsSummary, 'Tổng hợp');
+
+  // ── Sheet mỗi tháng: dữ liệu chi tiết ──
+  const headers = ['STT', 'TID', 'Tên MC', 'Vấn đề', 'Chi phí', 'Ngày', 'TT Khách hàng', 'TT Bank', 'Note'];
+
+  months.forEach(m => {
+    const recs = DB.filtered.filter(r => r.sheet === m);
+    if (!recs.length) return;
+
+    const rows = [headers];
+    recs.forEach((r, i) => {
+      rows.push([
+        r.stt || (i + 1),
+        r.tid || '',
+        r.tenMC || '',
+        r.vanDe || '',
+        Number(r.chiPhi) || 0,
+        excelDateToStr(r.ngay),
+        r.ttKH  || '',
+        r.ttBank || '',
+        r.note  || '',
+      ]);
+    });
+    // Thêm dòng tổng ở cuối mỗi sheet tháng
+    const tongThang = recs.reduce((s,r) => s+(Number(r.chiPhi)||0), 0);
+    rows.push(['', '', '', 'Tổng cộng', tongThang, '', '', '', '']);
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{ wch:6 },{ wch:12 },{ wch:28 },{ wch:16 },{ wch:12 },{ wch:12 },{ wch:18 },{ wch:16 },{ wch:30 }];
+
+    // Tên sheet: đổi dấu / thành - để hợp lệ
+    const sheetName = m.replace(/\//g, '-').substring(0, 31);
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  });
+
+  // Xuất file
+  const date = new Date().toISOString().slice(0,10);
+  const fname = `DenBuu_Export_${date}.xlsx`;
+  XLSX.writeFile(wb, fname);
+  toast(`✅ Đã xuất ${DB.filtered.length} phiếu → ${fname}`, 'ok');
 }
 
 function saveDbConfig() {
