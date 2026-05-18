@@ -2822,12 +2822,18 @@ async function uploadToDrive(dataUrl, mimeType, filename) {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'uploadImage', token: S.config.secretToken || '', base64, mimeType: mimeType || 'image/jpeg', filename: filename || ('img_' + Date.now() + '.jpg') }),
+      body: JSON.stringify({ action: 'uploadImage', session: S.session.token || '', base64, mimeType: mimeType || 'image/jpeg', filename: filename || ('img_' + Date.now() + '.jpg') }),
       redirect: 'follow',
     });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const text = await res.text();
     const data = JSON.parse(text);
+    if (data.error === 'SESSION_INVALID') {
+      S.session.token = null; S.session.expiresAt = null;
+      sessionStorage.removeItem('df_session');
+      toast('⚠️ Phiên đăng nhập hết hạn — hãy đăng xuất và đăng nhập lại để upload ảnh', 'inf');
+      return null;
+    }
     if (data.error) throw new Error(data.error);
     if (data.url) return data.url;
     throw new Error('Không nhận được URL từ Drive');
