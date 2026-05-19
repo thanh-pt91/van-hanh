@@ -1470,9 +1470,7 @@ async function loadFromSheets() {
     const res = await fetch(url + '?action=load' + tokenParam, { mode:'cors' });
     const data = await res.json();
     if (data.error === 'SESSION_INVALID') {
-      S.session.token = null; S.session.expiresAt = null;
-      sessionStorage.removeItem('df_session');
-      toast('⚠️ Phiên đăng nhập hết hạn — vui lòng đăng nhập lại', 'inf');
+      handleSessionExpired();
       throw new Error('Phiên đăng nhập hết hạn');
     }
     if (data.error) throw new Error(data.error);
@@ -1494,26 +1492,60 @@ async function loadFromSheets() {
   }
 }
 
+// ── Xử lý session hết hạn ở bất kỳ đâu ──
+function handleSessionExpired() {
+  S.session.token = null; S.session.expiresAt = null;
+  sessionStorage.removeItem('df_session');
+  // Tự đăng xuất nếu đang đăng nhập
+  if (S.currentUser) {
+    S.currentUser = null; S.role = 'viewer';
+    document.getElementById('topAv').textContent = '👤';
+    document.getElementById('topAv').style.background = '#E2E8F4';
+    document.getElementById('topAv').style.color = '#7A82A0';
+    document.getElementById('topName').textContent = 'Đăng nhập';
+    document.getElementById('topRole').textContent = 'Nhấn để đăng nhập';
+    document.getElementById('menuGuest').style.display = 'block';
+    document.getElementById('menuLoggedIn').style.display = 'none';
+    document.getElementById('sideAv').textContent = '?';
+    document.getElementById('sideAv').style.background = '#2A2D38';
+    document.getElementById('sideAv').style.color = '#8B91A8';
+    document.getElementById('sideName').textContent = 'Chưa đăng nhập';
+    const tag = document.getElementById('sideTag');
+    tag.textContent='Khách'; tag.style.background='rgba(160,174,192,.15)'; tag.style.color='#718096';
+    document.getElementById('btnCreate').disabled = true;
+    renderTable();
+  }
+  setSyncStatus('error','Phiên hết hạn');
+  toast('🔒 Phiên đăng nhập đã hết hạn — vui lòng đăng nhập lại', 'inf');
+}
+
 async function syncToSheets() {
   const url = S.config.scriptUrl;
   if (!url) return;
+  if (!S.session.token) return; // Không sync khi chưa đăng nhập
   setSyncStatus('syncing','Đang đồng bộ...');
   try {
     const payload = {
-      session: S.session.token || '',
+      session: S.session.token,
       requests: S.requests.map(r => ({ ...r })),
       accounts: S.accounts,
       config: [{ key:'requestTypes', value: JSON.stringify(S.config.requestTypes) }],
     };
-    await fetch(url, {
+    const res  = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify(payload),
       redirect: 'follow',
     });
+    const data = await res.json();
+    if (data.error === 'SESSION_INVALID') {
+      handleSessionExpired(); return;
+    }
+    if (data.error) throw new Error(data.error);
     setSyncStatus('synced','Đã đồng bộ: ' + new Date().toLocaleTimeString('vi'));
   } catch(e) {
-    setSyncStatus('error','Lỗi đồng bộ: ' + e.message);
+    if (e.message !== 'SESSION_INVALID')
+      setSyncStatus('error','Lỗi đồng bộ: ' + e.message);
   }
 }
 
@@ -1527,12 +1559,14 @@ function manualRefresh() {
 
 function startAutoRefresh() {
   if (!S.config.scriptUrl) return;
-  // Tự động tải từ Sheets mỗi 60 giây
   if (window._autoRefreshTimer) clearInterval(window._autoRefreshTimer);
   window._autoRefreshTimer = setInterval(() => {
-    if (document.visibilityState === 'visible' && S.config.scriptUrl) {
-      loadFromSheets();
+    if (document.visibilityState !== 'visible') return;
+    // Kiểm tra session hết hạn phía client trước
+    if (S.currentUser && S.session.expiresAt && new Date(S.session.expiresAt) <= new Date()) {
+      handleSessionExpired(); return;
     }
+    if (S.config.scriptUrl && S.session.token) loadFromSheets();
   }, 60000);
 }
 
@@ -2915,10 +2949,7 @@ async function uploadToDrive(dataUrl, mimeType, filename) {
     const text = await res.text();
     const data = JSON.parse(text);
     if (data.error === 'SESSION_INVALID') {
-      S.session.token = null; S.session.expiresAt = null;
-      sessionStorage.removeItem('df_session');
-      toast('⚠️ Phiên đăng nhập hết hạn — hãy đăng xuất và đăng nhập lại để upload ảnh', 'inf');
-      return null;
+      handleSessionExpired(); return null;
     }
     if (data.error) throw new Error(data.error);
     if (data.url) return data.url;
