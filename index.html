@@ -199,8 +199,15 @@ tbody td{padding:12px 14px;font-size:12px;color:var(--TX);vertical-align:middle;
 .type-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:1.5px solid var(--BO);border-radius:8px;background:#FAFBFD;}
 .type-item-name{font-size:13px;font-weight:600;}
 .type-item-btns{display:flex;gap:6px;}
-.btn-type-del{padding:4px 10px;border:1.5px solid #FEB2B2;border-radius:6px;background:#FFF5F5;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;color:#9B2C2C;transition:.15s;}
-.btn-type-del:hover{background:#FED7D7;}
+.ms-wrap{position:relative;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 11px;border:1.5px solid var(--BO);border-radius:8px;background:#FAFBFD;cursor:pointer;font-size:12px;color:var(--TX);min-width:220px;user-select:none;transition:.15s;}
+.ms-wrap:hover{border-color:#C0C6D8;}
+.ms-wrap.open{border-color:var(--Y);background:#fff;}
+#statusMsDisplay{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ms-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--CA);border:1.5px solid var(--BO);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:300;display:none;overflow:hidden;}
+.ms-wrap.open .ms-dropdown{display:block;}
+.ms-opt{display:flex;align-items:center;gap:9px;padding:9px 14px;cursor:pointer;font-size:12px;color:var(--TX);transition:.12s;}
+.ms-opt:hover{background:var(--BG);}
+.ms-opt input[type=checkbox]{width:14px;height:14px;accent-color:var(--Y);cursor:pointer;flex-shrink:0;}
 .btn-type-edit{padding:4px 10px;border:1.5px solid var(--BO);border-radius:6px;background:#fff;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;color:var(--TM);transition:.15s;display:inline-flex;align-items:center;gap:4px;}
 .btn-type-edit:hover{background:var(--BG);}
 .btn-type-save{padding:4px 10px;border:1.5px solid #9AE6B4;border-radius:6px;background:#F0FFF4;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;color:#276749;transition:.15s;display:inline-flex;align-items:center;gap:4px;}
@@ -571,14 +578,20 @@ tbody td{padding:12px 14px;font-size:12px;color:var(--TX);vertical-align:middle;
           </div>
           <div class="fl"><label>Loại yêu cầu</label><select class="fs-el" id="fType" onchange="filterTable()"><option value="">Tất cả</option></select></div>
           <div class="fl"><label>Trạng thái</label>
-            <select class="fs-el" id="fStatus" onchange="filterTable()">
-              <option value="">Tất cả</option>
-              <option value="wait">Chờ xử lý</option>
-              <option value="proc">Đang xử lý</option>
-              <option value="risk">Chờ Rủi ro</option>
-              <option value="done">Hoàn thành</option>
-              <option value="cancel">Từ chối/Hủy</option>
-            </select>
+            <div class="ms-wrap" id="statusMsWrap" onclick="toggleStatusDropdown(event)">
+              <span id="statusMsDisplay">Chờ xử lý, Đang xử lý, Chờ Rủi ro</span>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;color:var(--TM);"><polyline points="6 9 12 15 18 9"/></svg>
+              <div class="ms-dropdown" id="statusMsDropdown">
+                <label class="ms-opt" onclick="event.stopPropagation()"><input type="checkbox" value="" onchange="msSelectAll(this)"> <span>Tất cả</span></label>
+                <label class="ms-opt" onclick="event.stopPropagation()"><input type="checkbox" value="wait" checked onchange="filterTable()"> <span>● Chờ xử lý</span></label>
+                <label class="ms-opt" onclick="event.stopPropagation()"><input type="checkbox" value="proc" checked onchange="filterTable()"> <span>● Đang xử lý</span></label>
+                <label class="ms-opt" onclick="event.stopPropagation()"><input type="checkbox" value="risk" checked onchange="filterTable()"> <span>● Chờ Rủi ro</span></label>
+                <label class="ms-opt" onclick="event.stopPropagation()"><input type="checkbox" value="done" onchange="filterTable()"> <span>● Hoàn thành</span></label>
+                <label class="ms-opt" onclick="event.stopPropagation()"><input type="checkbox" value="cancel" onchange="filterTable()"> <span>● Từ chối/Hủy</span></label>
+              </div>
+            </div>
+            <!-- Hidden select để tương thích code cũ -->
+            <select id="fStatus" style="display:none;"></select>
           </div>
           <div class="fl"><label>&nbsp;</label><button class="btn btn-p" style="padding:8px 14px;" onclick="filterTable()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Tìm</button></div>
         </div>
@@ -2451,40 +2464,73 @@ document.addEventListener('click', e=>{
 function syncDateRange(){}
 function clearDates(e){ clearDRP(e); }
 
+// ── Multi-select trạng thái ──
+function toggleStatusDropdown(e) {
+  e.stopPropagation();
+  document.getElementById('statusMsWrap').classList.toggle('open');
+}
+function getSelectedStatuses() {
+  return [...document.querySelectorAll('#statusMsDropdown input[type=checkbox]:not([value=""])')
+    .values()].filter(c => c.checked).map(c => c.value);
+}
+function msSelectAll(cb) {
+  const all = document.querySelectorAll('#statusMsDropdown input[type=checkbox]:not([value=""])');
+  all.forEach(c => c.checked = cb.checked);
+  filterTable();
+}
+function updateStatusDisplay() {
+  const selected = getSelectedStatuses();
+  const labels = { wait:'Chờ xử lý', proc:'Đang xử lý', risk:'Chờ Rủi ro', done:'Hoàn thành', cancel:'Từ chối/Hủy' };
+  const disp = document.getElementById('statusMsDisplay');
+  if (!selected.length) disp.textContent = 'Tất cả trạng thái';
+  else if (selected.length === 5) disp.textContent = 'Tất cả trạng thái';
+  else disp.textContent = selected.map(v => labels[v]).join(', ');
+  // Sync all checkbox
+  const allCb = document.querySelector('#statusMsDropdown input[value=""]');
+  if (allCb) allCb.checked = selected.length === 5;
+}
+// Đóng dropdown khi click ngoài
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('statusMsWrap');
+  if (wrap && !wrap.contains(e.target)) wrap.classList.remove('open');
+});
+
 function resetFilters() {
   document.getElementById('searchInput').value = '';
   document.getElementById('fTid').value = '';
   document.getElementById('fType').value = '';
-  document.getElementById('fStatus').value = '';
+  document.querySelectorAll('#statusMsDropdown input[type=checkbox]').forEach(c => {
+    c.checked = ['wait','proc','risk'].includes(c.value);
+  });
+  updateStatusDisplay();
   clearDRP({ stopPropagation: () => {} });
+  filterTable();
 }
 
 function filterTable() {
-  const q      = (document.getElementById('searchInput').value||'').toLowerCase();
-  const tid    = (document.getElementById('fTid').value||'').toLowerCase();
-  const type   = document.getElementById('fType').value;
-  const status = document.getElementById('fStatus').value;
-  const d1     = document.getElementById('fD1').value;
-  const d2     = document.getElementById('fD2').value;
+  const q       = (document.getElementById('searchInput').value||'').toLowerCase();
+  const tid     = (document.getElementById('fTid').value||'').toLowerCase();
+  const type    = document.getElementById('fType').value;
+  const d1      = document.getElementById('fD1').value;
+  const d2      = document.getElementById('fD2').value;
+  const statuses = getSelectedStatuses(); // multi-select
+  updateStatusDisplay();
 
-  // Nếu không có filter nào → hiện tất cả
-  const hasFilter = q || tid || type || status || d1 || d2;
-  if (!hasFilter) {
+  const hasFilter = q || tid || type || d1 || d2 || statuses.length < 5;
+  if (!hasFilter || statuses.length === 0) {
     filteredReqs = [...S.requests];
-    renderTable();
-    return;
+  } else {
+    filteredReqs = S.requests.filter(r => {
+      if (q && !r.tid.toLowerCase().includes(q) && !(r.title||'').toLowerCase().includes(q)) return false;
+      if (tid && !r.tid.toLowerCase().includes(tid)) return false;
+      if (type && r.type !== type) return false;
+      if (statuses.length && !statuses.includes(r.status)) return false;
+      const rDate = normalizeDate(r.date);
+      if (d1 && rDate < d1) return false;
+      if (d2 && rDate > d2) return false;
+      return true;
+    });
   }
-
-  filteredReqs = S.requests.filter(r => {
-    if (q && !r.tid.toLowerCase().includes(q) && !(r.title||'').toLowerCase().includes(q)) return false;
-    if (tid && !r.tid.toLowerCase().includes(tid)) return false;
-    if (type && r.type !== type) return false;
-    if (status && r.status !== status) return false;
-    const rDate = normalizeDate(r.date);
-    if (d1 && rDate < d1) return false;
-    if (d2 && rDate > d2) return false;
-    return true;
-  });
   renderTable();
 }
 
